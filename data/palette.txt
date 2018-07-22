@@ -1,0 +1,85 @@
+Greyscale:
+* White             #f0f0f0, 94%
+* Light grey        #999999, 60%
+* Grey              #4c4c4c, 30%
+* Dark grey         #292929, 16%
+* Black             #1a1a1a, 10%
+
+Warm greyscale:
+* Sun               #fff9e0
+* Sandstone         #b5a896
+* Taupe             #4d4841
+* Shadow            #29271b
+* Licorice          #141002
+
+Cool greyscale:
+* Moon              #ebebff
+* Concrete          #a0a0ad
+* Charcoal          #444457
+* Jaguar            #20202e
+* Night sky         #0f0f1c
+
+Saturated greyscale:
+* Bright white      #ffffff
+* Middle grey       #888888
+* Pitch black       #000000
+
+Base colors:
+* Red               #d92323
+* Orange            #ec9523
+* Yellow            #eeee13
+* Green             #35cf2e
+* Cyan              #1ee5e5
+* Blue              #2424d1
+* Violet            #7a0cc6
+* Magenta           #f116c8
+
+Saturated colors:
+* Bright red        #ff0000
+* Bright orange     #ff8800
+* Bright yellow     #ffff00
+* Bright green      #00ff00
+* Bright cyan       #00ffff
+* Bright blue       #0000ff
+* Bright violet     #8800ff
+* Bright magenta    #ff00ff
+
+Pastel colors:
+* Pink              #ff95bf
+* Peach             #ffc37d
+* Cream             #fffba6
+* Mint              #a9eda6
+* Aquamarine        #90ffda
+* Sky blue          #91c4f0
+* Mauve             #ceafe2
+* Flamingo          #f979da
+
+Murky colors:
+* Blood             #66130a
+* Brown             #964B00
+* Sand              #b8ac43
+* Avocado           #427515
+* Teal              #227d8f
+* Prussian blue     #003167
+* Purple            #ab23ab
+* Cherry            #ac2854
+
+Warm colors:
+* Scarlet           #ff361c
+* Carrot            #ff7d0d
+* Amber             #eed41f
+* Lime              #88db1a
+* Aqua              #55eef3
+* Ultramarine       #4a04d1
+* Amethyst          #a14be2
+* Hot pink          #fc60ae
+
+Cold colors:
+* Carmine           #cc1053
+* Apricot           #e8975f
+* Pear              #cbdb5c
+* Emerald           #38be74
+* Turquoise         #4eb9cf
+* Cerulean          #2247a6
+* Orchid            #843ac6
+* Fuchsia           #df4589
