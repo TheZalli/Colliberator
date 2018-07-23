@@ -2,14 +2,14 @@ use std::str;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 enum BaseColor {
+    Black,
     Grey,
+    White,
     Red,
-    Orange,
     Yellow,
     Green,
     Cyan,
     Blue,
-    Violet,
     Magenta,
 }
 
@@ -19,8 +19,14 @@ impl BaseColor {
 
 pub trait Color {
     fn rgb(&self) -> ColorRGB;
-    fn hue(&self) -> f32;
-    // sat(&self)
+    fn r(&self) -> u8 { self.rgb().r }
+    fn g(&self) -> u8 { self.rgb().g }
+    fn b(&self) -> u8 { self.rgb().b }
+
+    fn hsv(&self) -> ColorHSV;
+    fn h(&self) -> f32 { self.hsv().h }
+    fn s(&self) -> f32 { self.hsv().s }
+    fn v(&self) -> f32 { self.hsv().v }
 }
 
 impl Color for BaseColor {
@@ -29,31 +35,32 @@ impl Color for BaseColor {
 
         let f = &ColorRGB::new;
         match self {
+            Black   => f(  0,   0,   0),
             Grey    => f(128, 128, 128),
+            White   => f(255, 255, 255),
             Red     => f(255,   0,   0),
-            Orange  => f(255, 128,   0),
             Yellow  => f(255, 255,   0),
             Green   => f(  0, 255,   0),
             Cyan    => f(  0, 255, 255),
             Blue    => f(  0,   0, 255),
-            Violet  => f(128,   0, 255),
             Magenta => f(255,   0, 255),
         }
     }
 
-    fn hue(&self) -> f32 {
+    fn hsv(&self) -> ColorHSV {
         use self::BaseColor::*;
 
+        let f = &ColorHSV::new;
         match self {
-            Grey    => 0.0,
-            Red     => 0.0,
-            Orange  => 30.0,
-            Yellow  => 60.0,
-            Green   => 120.0,
-            Cyan    => 180.0,
-            Blue    => 240.0,
-            Violet  => 270.0,
-            Magenta => 300.0,
+            Black   => f(  0.0, 0.0, 0.0),
+            Grey    => f(  0.0, 0.0, 0.5),
+            White   => f(  0.0, 0.0, 1.0),
+            Red     => f(  0.0, 1.0, 1.0),
+            Yellow  => f( 60.0, 1.0, 1.0),
+            Green   => f(120.0, 1.0, 1.0),
+            Cyan    => f(180.0, 1.0, 1.0),
+            Blue    => f(240.0, 1.0, 1.0),
+            Magenta => f(300.0, 1.0, 1.0),
         }
     }
 }
@@ -94,9 +101,96 @@ impl ColorRGB {
     }
 }
 
+impl Color for ColorRGB {
+    fn rgb(&self) -> ColorRGB { *self }
+
+    fn hsv(&self) -> ColorHSV {
+        let (r, g, b) =
+            (self.r as f32 / 255.0,
+             self.g as f32 / 255.0,
+             self.b as f32 / 255.0);
+
+        let max = r.max(g).max(b);
+        let min = r.min(g).min(b);
+        let chroma = max - min;
+
+        let value = (r + g + b) / 3.0;
+
+        let saturation =
+            if value == 0.0 {
+                0.0
+            } else {
+                chroma / value
+            };
+
+        let hue = 60.0 *
+            if chroma == 0.0 {
+                0.0
+            } else if max == r {
+                ((g - b) / chroma) % 6.0
+            } else if max == g {
+                (b - r) / chroma + 2.0
+            } else { // max == b
+                (r - g) / chroma + 4.0
+            };
+
+        ColorHSV::new(hue, saturation, value)
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+pub struct ColorHSV {
+    h: f32,
+    s: f32,
+    v: f32,
+}
+
+impl ColorHSV {
+    pub fn new(h: f32, s: f32, v: f32) -> Self {
+        ColorHSV {h, s, v}
+    }
+}
+
+impl Color for ColorHSV {
+    fn rgb(&self) -> ColorRGB {
+        let (h, s, v) = (self.h, self.s, self.v);
+        let h = h / 60.0;
+
+        // chroma, largest component
+        let c = s * v;
+
+        // second largest component
+        let x = c * (1.0 - (h % 2.0 - 1.0).abs());
+
+        // smallest component
+        let min = v - c;
+
+        let (r, g, b) =
+            match h as u8 {
+                0   => (  c,   x, 0.0),
+                1   => (  x,   c, 0.0),
+                2   => (0.0,   c,   x),
+                3   => (0.0,   x,   c),
+                4   => (  x, 0.0,   c),
+                5|6 => (  c, 0.0,   x),
+                _   => panic!("Invalid hue value: {}", self.h)
+            };
+
+        let (r, g, b) =
+            ((r+min) as u8,
+             (g+min) as u8,
+             (b+min) as u8);
+
+        ColorRGB{ r, g, b }
+    }
+
+    fn hsv(&self) -> ColorHSV { *self }
+}
+
 pub struct ColorData {
     name: Box<str>,
-    shades_of: BaseColor
+    shade1: BaseColor,
+    shade2: BaseColor,
 }
 
 impl ColorData {
