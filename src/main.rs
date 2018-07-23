@@ -9,7 +9,15 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::collections::{HashMap, BTreeMap};
 
-type Color = u32;
+mod color;
+
+use color::*;
+
+lazy_static! {
+    static ref SETNAME_RE: Regex = Regex::new(r"^(.*?):").unwrap();
+    static ref COLORLINE_RE: Regex =
+        Regex::new(r"^\*\s*([^#]+?)\s*#([0-9a-fA-F]{6})").unwrap();
+}
 
 #[derive(Debug, Fail)]
 enum PaletteError {
@@ -18,9 +26,7 @@ enum PaletteError {
         name: Box<str>
     },
     #[fail(display = "IO error: {}", inner)]
-    IO {
-        inner: std::io::Error,
-    }
+    IO { inner: std::io::Error }
 }
 
 impl From<std::io::Error> for PaletteError {
@@ -31,8 +37,8 @@ impl From<std::io::Error> for PaletteError {
 
 #[derive(Debug)]
 struct Palette {
-    colors: BTreeMap<Color, Box<str>>,
-    colorsets: HashMap<Box<str>, Box<[Color]>>,
+    colors: BTreeMap<ColorRGB, Box<str>>,
+    colorsets: HashMap<Box<str>, Box<[ColorRGB]>>,
 }
 
 impl Palette {
@@ -61,17 +67,17 @@ impl Palette {
                 colname.make_ascii_lowercase();
                 let colname: Box<str> = colname;
 
-                let colcode = Color::from_str_radix(&capt[2], 16).unwrap();
+                let rgb = unsafe { ColorRGB::from_hex_unchecked(capt[2].into()) };
 
                 if current_colorset_name.as_ref() == "" {
                     return Err(PaletteError::ColorWithoutSet { name: colname });
                 }
 
                 // record color set data
-                colorsets.entry(current_colorset_name.clone()).or_insert(Vec::new()).push(colcode);
+                colorsets.entry(current_colorset_name.clone()).or_insert(Vec::new()).push(rgb);
 
                 // record the color itself
-                colors.insert(colcode, colname);
+                colors.insert(rgb, colname);
             } else {
                 // empty line
                 continue;
@@ -82,12 +88,6 @@ impl Palette {
 
         Ok(Palette { colors, colorsets })
     }
-}
-
-lazy_static! {
-    static ref SETNAME_RE: Regex = Regex::new(r"^(.*?):").unwrap();
-    static ref COLORLINE_RE: Regex =
-        Regex::new(r"^\*\s*([^#]+?)\s*#([0-9a-fA-F]{6})").unwrap();
 }
 
 fn main() {

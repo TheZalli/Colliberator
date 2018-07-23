@@ -35,14 +35,14 @@ Base colors:
 * Magenta           #f116c8
 
 Saturated colors:
-* Bright red        #ff0000
-* Bright orange     #ff8800
-* Bright yellow     #ffff00
-* Bright green      #00ff00
-* Bright cyan       #00ffff
-* Bright blue       #0000ff
-* Bright violet     #8800ff
-* Bright magenta    #ff00ff
+* Pure red          #ff0000
+* Pure orange       #ff8000
+* Pure yellow       #ffff00
+* Pure green        #00ff00
+* Pure cyan         #00ffff
+* Pure blue         #0000ff
+* Pure violet       #8000ff
+* Pure magenta      #ff00ff
 
 Pastel colors:
 * Pink              #ff95bf
