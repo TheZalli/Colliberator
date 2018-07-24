@@ -1,7 +1,9 @@
 use std::str;
+use std::fmt;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-enum BaseColor {
+/// The basic colors of the rainbow
+pub enum BaseColor {
     Black,
     Grey,
     White,
@@ -13,20 +15,84 @@ enum BaseColor {
     Magenta,
 }
 
-impl BaseColor {
+impl fmt::Display for BaseColor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use self::BaseColor::*;
 
+        write!(f, "{}",
+            match *self {
+                Black   => "black",
+                Grey    => "grey",
+                White   => "white",
+                Red     => "red",
+                Yellow  => "yellow",
+                Green   => "green",
+                Cyan    => "cyan",
+                Blue    => "blue",
+                Magenta => "magenta",
+            }
+        )
+    }
 }
 
 pub trait Color {
+    /// Return the RGB representation
     fn rgb(&self) -> ColorRGB;
     fn r(&self) -> u8 { self.rgb().r }
     fn g(&self) -> u8 { self.rgb().g }
     fn b(&self) -> u8 { self.rgb().b }
 
+    /// Return the HSV representation
     fn hsv(&self) -> ColorHSV;
     fn h(&self) -> f32 { self.hsv().h }
     fn s(&self) -> f32 { self.hsv().s }
     fn v(&self) -> f32 { self.hsv().v }
+
+    /// Categorize this color's most prominent shades
+    fn shades(&self) -> Vec<(f32, BaseColor)> {
+        use self::BaseColor::*;
+        // this whole function is horrible code. TODO: fix
+
+        const COLORS: [BaseColor; 9] =
+            [Black, Grey, White, Red, Yellow, Green, Cyan, Blue, Magenta];
+
+        let (r, g, b) = self.rgb().to_tuple();
+
+        let mut shade_weights = [0f32; 9];
+        let mut min_weight = 0f32;
+        let mut max_weight = 0f32;
+
+        for (weight, color) in shade_weights.iter_mut().zip(COLORS.iter()) {
+            let (r2, g2, b2) = color.rgb().to_tuple();
+
+            let dist2 =
+                (r2 as i32 - r as i32).pow(2) +
+                (g2 as i32 - g as i32).pow(2) +
+                (b2 as i32 - b as i32).pow(2);
+
+            let dist = (dist2 as f32).sqrt();
+
+            if dist < min_weight {
+                min_weight = dist;
+            }
+            if dist > max_weight {
+                max_weight = dist;
+            }
+
+            *weight = dist;
+        }
+
+        let mut shades = Vec::with_capacity(3);
+
+        // rescale weight to go from range 0% to 100%
+        for (dist, color) in shade_weights.iter().zip(COLORS.iter()) {
+            let percentage = (max_weight - dist - 2.0 * min_weight) / (max_weight - min_weight);
+
+            shades.push((percentage, *color))
+        }
+
+        return shades;
+    }
 }
 
 impl Color for BaseColor {
@@ -66,6 +132,7 @@ impl Color for BaseColor {
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+/// A 24-bit color with red, green and blue channels.
 pub struct ColorRGB {
     pub r: u8,
     pub g: u8,
@@ -73,6 +140,7 @@ pub struct ColorRGB {
 }
 
 impl ColorRGB {
+    /// Create a new RGB color.
     pub fn new(r: u8, g: u8, b: u8) -> Self {
         ColorRGB {r, g, b}
     }
@@ -98,6 +166,10 @@ impl ColorRGB {
             g: f(h[2], h[3]),
             b: f(h[4], h[5]),
         }
+    }
+
+    pub fn to_tuple(&self) -> (u8, u8, u8) {
+        (self.r, self.g, self.b)
     }
 }
 
@@ -138,22 +210,32 @@ impl Color for ColorRGB {
     }
 }
 
+impl fmt::Display for ColorRGB {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct ColorHSV {
-    h: f32,
-    s: f32,
-    v: f32,
+    pub h: f32,
+    pub s: f32,
+    pub v: f32,
 }
 
 impl ColorHSV {
     pub fn new(h: f32, s: f32, v: f32) -> Self {
         ColorHSV {h, s, v}
     }
+
+    pub fn to_tuple(&self) -> (f32, f32, f32) {
+        (self.h, self.s, self.v)
+    }
 }
 
 impl Color for ColorHSV {
     fn rgb(&self) -> ColorRGB {
-        let (h, s, v) = (self.h, self.s, self.v);
+        let (h, s, v) = self.to_tuple();
         let h = h / 60.0;
 
         // chroma, largest component
@@ -185,16 +267,11 @@ impl Color for ColorHSV {
     }
 
     fn hsv(&self) -> ColorHSV { *self }
-}
 
-pub struct ColorData {
-    name: Box<str>,
-    shade1: BaseColor,
-    shade2: BaseColor,
 }
-
-impl ColorData {
-    pub fn new(name: Box<str>, color: ColorRGB) -> Self {
-        unimplemented!()
+impl fmt::Display for ColorHSV {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>width$.precision$}°, {:>width$.precision$}%, {:>width$.precision$}%",
+               self.h, self.s * 100.0, self.v * 100.0, width=5, precision=1)
     }
 }
