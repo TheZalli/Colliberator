@@ -51,45 +51,14 @@ pub trait Color {
     /// Categorize this color's most prominent shades
     fn shades(&self) -> Vec<(f32, BaseColor)> {
         use self::BaseColor::*;
-        // this whole function is horrible code. TODO: fix
 
-        const COLORS: [BaseColor; 9] =
-            [Black, Grey, White, Red, Yellow, Green, Cyan, Blue, Magenta];
+        const GREYSCALE: [BaseColor; 3] = [Black, Grey, White];
+        const COLORS: [BaseColor; 6] = [Red, Yellow, Green, Cyan, Blue, Magenta];
 
-        let (r, g, b) = self.rgb().to_tuple();
-
-        let mut shade_weights = [0f32; 9];
-        let mut min_weight = 0f32;
-        let mut max_weight = 0f32;
-
-        for (weight, color) in shade_weights.iter_mut().zip(COLORS.iter()) {
-            let (r2, g2, b2) = color.rgb().to_tuple();
-
-            let dist2 =
-                (r2 as i32 - r as i32).pow(2) +
-                (g2 as i32 - g as i32).pow(2) +
-                (b2 as i32 - b as i32).pow(2);
-
-            let dist = (dist2 as f32).sqrt();
-
-            if dist < min_weight {
-                min_weight = dist;
-            }
-            if dist > max_weight {
-                max_weight = dist;
-            }
-
-            *weight = dist;
-        }
+        let (h, s, v) = self.hsv().to_tuple();
 
         let mut shades = Vec::with_capacity(3);
 
-        // rescale weight to go from range 0% to 100%
-        for (dist, color) in shade_weights.iter().zip(COLORS.iter()) {
-            let percentage = (max_weight - dist - 2.0 * min_weight) / (max_weight - min_weight);
-
-            shades.push((percentage, *color))
-        }
 
         return shades;
     }
@@ -184,26 +153,26 @@ impl Color for ColorRGB {
 
         let max = r.max(g).max(b);
         let min = r.min(g).min(b);
-        let chroma = max - min;
+        let delta = max - min;
 
-        let value = (r + g + b) / 3.0;
+        let value = max;
 
         let saturation =
-            if value == 0.0 {
+            if max == 0.0 {
                 0.0
             } else {
-                chroma / value
+                delta / max
             };
 
         let hue = 60.0 *
-            if chroma == 0.0 {
+            if delta == 0.0 {
                 0.0
             } else if max == r {
-                ((g - b) / chroma) % 6.0
+                ((g - b) / delta) % 6.0
             } else if max == g {
-                (b - r) / chroma + 2.0
+                (b - r) / delta + 2.0
             } else { // max == b
-                (r - g) / chroma + 4.0
+                (r - g) / delta + 4.0
             };
 
         ColorHSV::new(hue, saturation, value)
@@ -221,11 +190,17 @@ pub struct ColorHSV {
     pub h: f32,
     pub s: f32,
     pub v: f32,
+    // this is so we have to use the constructor `new`
+    _void: (),
 }
 
 impl ColorHSV {
     pub fn new(h: f32, s: f32, v: f32) -> Self {
-        ColorHSV {h, s, v}
+        let mut h = h % 360.0;
+        if h < 0.0 {
+            h = h + 360.0;
+        }
+        ColorHSV {h, s, v, _void: ()}
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) {

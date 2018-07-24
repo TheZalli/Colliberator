@@ -142,7 +142,7 @@ impl ColorInfo {
 
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "rgb: ({}), hsv: ({}), shades of [", self.rgb, self.hsv)?;
+        write!(f, "rgb: ({}), hsv: ({}), is shades of [", self.rgb, self.hsv)?;
 
         for (weight, color) in self.shades_of.iter() {
             write!(f, " {} ({:.2}),", color, weight)?;

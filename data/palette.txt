@@ -19,9 +19,9 @@ Cool greyscale:
 * Jaguar            #20202e
 * Night sky         #0f0f1c
 
-Saturated greyscale:
+Base greyscale:
 * Bright white      #ffffff
-* Middle grey       #888888
+* Middle grey       #808080
 * Pitch black       #000000
 
 Base colors:

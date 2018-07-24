@@ -18,8 +18,9 @@ fn main() {
             let color_name = pal.name_color(color).unwrap();
             let color_info = ColorInfo::new(color);
 
-            println!("  Color `{}`:", color_name);
-            println!("    {}", color_info);
+            let fmt_name = String::new() + "'"+color_name+"':";
+
+            println!("  Color {:<20} {}", fmt_name, color_info);
         }
     }
 }
