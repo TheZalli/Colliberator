@@ -195,7 +195,21 @@ pub struct ColorHSV {
 }
 
 impl ColorHSV {
+    /// Create a new HSV value.
+    ///
+    /// Hue is given in degrees and it is wrapped between [0, 360).
+    /// Saturation and value are given as a percentage between \[0, 1\].
+    ///
+    /// # Panic
+    /// If saturation and value are not between 0.0 and 1.0, this function will panic.
     pub fn new(h: f32, s: f32, v: f32) -> Self {
+        if s < 0.0 || s > 1.0 {
+            panic!("Invalid HSV saturation: {}", s);
+        }
+        if v < 0.0 || v > 1.0 {
+            panic!("Invalid HSV value: {}", v);
+        }
+
         let mut h = h % 360.0;
         if h < 0.0 {
             h = h + 360.0;
