@@ -52,13 +52,42 @@ pub trait Color {
     fn shades(&self) -> Vec<(f32, BaseColor)> {
         use self::BaseColor::*;
 
-        const GREYSCALE: [BaseColor; 3] = [Black, Grey, White];
-        const COLORS: [BaseColor; 6] = [Red, Yellow, Green, Cyan, Blue, Magenta];
+        // how many degrees from the main hue can a shade be
+        const HUEMARGIN: f32 = 30.0 + 15.0;
 
-        let (h, s, v) = self.hsv().to_tuple();
+        // saturation under this value is considered to be greyscale
+        //const SATURATIONMARGIN: f32 = 0.05;
+
+        // margin for the shades of black and white
+        //const VALUEMARGIN: f32 = 70.0;
+
+        const COLORHUES: [(f32, BaseColor); 5] =
+            [(60.0, Yellow),
+             (120.0, Green),
+             (180.0, Cyan),
+             (240.0, Blue),
+             (300.0, Magenta)];
 
         let mut shades = Vec::with_capacity(3);
+        let (h, s, v) = self.hsv().to_tuple();
 
+        // red is a special case
+        if h >= 360.0 - HUEMARGIN || h <= 0.0 + HUEMARGIN {
+            let amount = 1.0 -
+                if h <= 0.0 + HUEMARGIN {
+                    h
+                } else {
+                    h - 360.0
+                } / HUEMARGIN;
+
+            shades.push((amount, Red));
+        }
+        for (hue, color) in COLORHUES.iter() {
+            let dist = (h - hue).abs();
+            if dist <= HUEMARGIN {
+                shades.push((1.0 - dist/ HUEMARGIN, *color));
+            }
+        }
 
         return shades;
     }
