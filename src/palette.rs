@@ -127,7 +127,7 @@ impl<'a> Iterator for ColorSetsIter<'a> {
 pub struct ColorInfo {
     pub rgb: ColorRGB,
     pub hsv: ColorHSV,
-    pub shades_of: Vec<(f32, BaseColor)>,
+    pub shades_of: Vec<(BaseColor, f32)>,
 }
 
 impl ColorInfo {
@@ -144,7 +144,7 @@ impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "rgb: ({}), hsv: ({}), is shades of [", self.rgb, self.hsv)?;
 
-        for (weight, color) in self.shades_of.iter() {
+        for (color, weight) in self.shades_of.iter() {
             write!(f, " {} ({:.2}),", color, weight)?;
         }
 

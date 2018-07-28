@@ -49,44 +49,78 @@ pub trait Color {
     fn v(&self) -> f32 { self.hsv().v }
 
     /// Categorize this color's most prominent shades
-    fn shades(&self) -> Vec<(f32, BaseColor)> {
+    fn shades(&self) ->  Vec<(BaseColor, f32)> {
         use self::BaseColor::*;
 
-        // how many degrees from the main hue can a shade be
-        const HUEMARGIN: f32 = 30.0 + 15.0;
-
-        // saturation under this value is considered to be greyscale
-        //const SATURATIONMARGIN: f32 = 0.05;
-
-        // margin for the shades of black and white
-        //const VALUEMARGIN: f32 = 70.0;
-
-        const COLORHUES: [(f32, BaseColor); 5] =
+        const COLOR_HUES: [(f32, BaseColor); 5] =
             [(60.0, Yellow),
              (120.0, Green),
              (180.0, Cyan),
              (240.0, Blue),
              (300.0, Magenta)];
 
+        // all of these borders have been picked by what looks nice
+        // they could be improved
+
+        // how many degrees from the main hue can a shade be
+        const HUE_MARGIN: f32 = 60 * 0.75;
+
+        // HSV value under this value is considered to be just black
+        const BLACK_CUTOFF_VALUE: f32 = 0.07;
+
+        // saturation under this value is considered to be just greyscale without any color
+        const GREYSCALE_SATURATION: f32 = 0.05;
+
+        // saturation and value borders for the greyscale shades
+        const WHITE_SATURATION: f32 = 0.35;
+        const WHITE_VALUE: f32 = 0.60;
+
+        const GREY_SATURATION: f32 = 0.45;
+        const GREY_VALUE_MAX: f32 = 0.80;
+        const GREY_VALUE_MIN: f32 = 0.15;
+
+        const BLACK_VALUE: f32 = 0.25;
+
+        assert!(GREYSCALE_SATURATION <= WHITE_SATURATION);
+        assert!(GREYSCALE_SATURATION <= GREY_SATURATION);
+
         let mut shades = Vec::with_capacity(3);
         let (h, s, v) = self.hsv().to_tuple();
 
-        // red is a special case
-        if h >= 360.0 - HUEMARGIN || h <= 0.0 + HUEMARGIN {
-            let amount = 1.0 -
-                if h <= 0.0 + HUEMARGIN {
-                    h
-                } else {
-                    h - 360.0
-                } / HUEMARGIN;
-
-            shades.push((amount, Red));
+        if v < BLACK_CUTOFF_VALUE {
+            return vec![(Black, 1.0)];
         }
-        for (hue, color) in COLORHUES.iter() {
-            let dist = (h - hue).abs();
-            if dist <= HUEMARGIN {
-                shades.push((1.0 - dist/ HUEMARGIN, *color));
+
+        if s > GREYSCALE_SATURATION {
+            // red is a special case
+            if h >= 360.0 - HUE_MARGIN || h <= 0.0 + HUE_MARGIN {
+                let amount = 1.0 -
+                    if h <= 0.0 + HUE_MARGIN {
+                        h
+                    } else {
+                        h - 360.0
+                    } / HUE_MARGIN;
+
+                shades.push((Red, amount));
             }
+            for (hue, color) in COLOR_HUES.iter() {
+                let dist = (h - hue).abs();
+                if dist <= HUE_MARGIN {
+                    shades.push((*color, 1.0 - dist / HUE_MARGIN));
+                }
+            }
+        }
+
+        if v <= BLACK_VALUE {
+            shades.push((Black, 1.0));
+        } else if v >= WHITE_VALUE && s <= WHITE_SATURATION {
+            let amount = 1.0 - (WHITE_SATURATION - s) / WHITE_SATURATION;
+            shades.push((White, amount));
+        }
+
+        if s <= GREY_SATURATION && v <= GREY_VALUE_MAX && v >= GREY_VALUE_MIN {
+            let amount = 1.0 - (GREY_SATURATION - s) / GREY_SATURATION;
+            shades.push((Grey, amount));
         }
 
         return shades;
