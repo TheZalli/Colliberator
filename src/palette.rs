@@ -18,11 +18,11 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct ColorSet {
-    colors: Box<[ColorRGB]>,
+    colors: Box<[RGB24Color]>,
 }
 
 impl ColorSet {
-    fn new(colors: Box<[ColorRGB]>) -> Self {
+    fn new(colors: Box<[RGB24Color]>) -> Self {
         ColorSet{ colors }
     }
 
@@ -32,20 +32,20 @@ impl ColorSet {
 }
 
 pub struct ColorSetIter<'a>(
-    ::std::iter::Cloned<::std::slice::Iter<'a, ColorRGB>>
+    ::std::iter::Cloned<::std::slice::Iter<'a, RGB24Color>>
 );
 
 impl<'a> Iterator for ColorSetIter<'a> {
-    type Item = ColorRGB;
+    type Item = RGB24Color;
 
-    fn next(&mut self) -> Option<ColorRGB> {
+    fn next(&mut self) -> Option<RGB24Color> {
         self.0.next()
     }
 }
 
 #[derive(Debug)]
 pub struct Palette {
-    colors: BTreeMap<ColorRGB, Box<str>>,
+    colors: BTreeMap<RGB24Color, Box<str>>,
     colorsets: HashMap<Box<str>, ColorSet>,
 }
 
@@ -75,7 +75,7 @@ impl Palette {
                 colname.make_ascii_lowercase();
                 let colname: Box<str> = colname;
 
-                let rgb = unsafe { ColorRGB::from_hex_unchecked(capt[2].into()) };
+                let rgb = unsafe { RGB24Color::from_hex_unchecked(capt[2].into()) };
 
                 if current_colorset_name.as_ref() == "" {
                     return Err(PaletteError::ColorWithoutSet { name: colname });
@@ -107,7 +107,7 @@ impl Palette {
 
     /// Returns the name of the given color, if it exists.
     pub fn name_color<T: Color>(&self, color: T) -> Option<&str> {
-        Some(self.colors.get(&color.rgb())?.as_ref())
+        Some(self.colors.get(&color.rgb24())?.as_ref())
     }
 
 }
@@ -125,15 +125,15 @@ impl<'a> Iterator for ColorSetsIter<'a> {
 
 #[derive(Debug)]
 pub struct ColorInfo {
-    pub rgb: ColorRGB,
-    pub hsv: ColorHSV,
+    pub rgb: RGB24Color,
+    pub hsv: HSVColor,
     pub shades_of: Vec<(BaseColor, f32)>,
 }
 
 impl ColorInfo {
     pub fn new<T: Color>(color: T) -> Self {
         ColorInfo {
-            rgb: color.rgb(),
+            rgb: color.rgb24(),
             hsv: color.hsv(),
             shades_of: color.shades(),
         }

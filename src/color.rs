@@ -36,14 +36,21 @@ impl fmt::Display for BaseColor {
 }
 
 pub trait Color {
-    /// Return the RGB representation
-    fn rgb(&self) -> ColorRGB;
-    fn r(&self) -> u8 { self.rgb().r }
-    fn g(&self) -> u8 { self.rgb().g }
-    fn b(&self) -> u8 { self.rgb().b }
+    /// Return the 24-bit RGB representation
+    fn rgb24(&self) -> RGB24Color;
+    fn r8(&self) -> u8 { self.rgb24().r }
+    fn g8(&self) -> u8 { self.rgb24().g }
+    fn b8(&self) -> u8 { self.rgb24().b }
+
+    /// Return the normalised RGB representation
+    fn rgb_norm(&self) -> RGBNormColor;
+
+    fn rn(&self) -> f32 { self.rgb_norm().r }
+    fn gn(&self) -> f32 { self.rgb_norm().g }
+    fn bn(&self) -> f32 { self.rgb_norm().b }
 
     /// Return the HSV representation
-    fn hsv(&self) -> ColorHSV;
+    fn hsv(&self) -> HSVColor;
     fn h(&self) -> f32 { self.hsv().h }
     fn s(&self) -> f32 { self.hsv().s }
     fn v(&self) -> f32 { self.hsv().v }
@@ -129,7 +136,7 @@ pub trait Color {
     /// Returns the `text` with this color as it's background color.
     fn ansi_escape_bgcolor(&self, text: &str) -> String {
         const CSI: &str = "\u{1B}[";
-        let (r, g, b) = self.rgb().to_tuple();
+        let (r, g, b) = self.rgb24().to_tuple();
 
         // color the text as black or white depending on the bg:s lightness
         let fg =
@@ -144,10 +151,10 @@ pub trait Color {
 }
 
 impl Color for BaseColor {
-    fn rgb(&self) -> ColorRGB {
+    fn rgb24(&self) -> RGB24Color {
         use self::BaseColor::*;
 
-        let f = &ColorRGB::new;
+        let f = &RGB24Color::new;
         match self {
             Black   => f(  0,   0,   0),
             Grey    => f(128, 128, 128),
@@ -161,10 +168,14 @@ impl Color for BaseColor {
         }
     }
 
-    fn hsv(&self) -> ColorHSV {
+    fn rgb_norm(&self) -> RGBNormColor {
+        self.rgb24().rgb_norm()
+    }
+
+    fn hsv(&self) -> HSVColor {
         use self::BaseColor::*;
 
-        let f = &ColorHSV::new;
+        let f = &HSVColor::new;
         match self {
             Black   => f(  0.0, 0.0, 0.0),
             Grey    => f(  0.0, 0.0, 0.5),
@@ -181,16 +192,20 @@ impl Color for BaseColor {
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// A 24-bit color with red, green and blue channels.
-pub struct ColorRGB {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+pub struct RGB24Color {
+    r: u8,
+    g: u8,
+    b: u8
 }
 
-impl ColorRGB {
+impl RGB24Color {
     /// Create a new RGB color.
     pub fn new(r: u8, g: u8, b: u8) -> Self {
-        ColorRGB {r, g, b}
+        RGB24Color { r, g, b }
+    }
+
+    pub fn to_tuple(&self) -> (u8, u8, u8) {
+        (self.r, self.g, self.b)
     }
 
     /// Create `ColorRGB` from a hexcode.
@@ -209,26 +224,60 @@ impl ColorRGB {
         let h = hex_str.as_bytes_mut();
         h.make_ascii_lowercase();
 
-        ColorRGB {
+        RGB24Color {
             r: f(h[0], h[1]),
             g: f(h[2], h[3]),
             b: f(h[4], h[5]),
         }
     }
+}
 
-    pub fn to_tuple(&self) -> (u8, u8, u8) {
+impl Color for RGB24Color {
+    fn rgb24(&self) -> RGB24Color { *self }
+
+    fn rgb_norm(&self) -> RGBNormColor {
+        let (r, g, b) = self.to_tuple();
+        RGBNormColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+    }
+
+    fn hsv(&self) -> HSVColor {
+        self.rgb_norm().hsv()
+    }
+}
+
+impl fmt::Display for RGB24Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+/// An RGB color with channels normalized between 0 and 1.
+pub struct RGBNormColor {
+    r: f32,
+    g: f32,
+    b: f32
+}
+
+impl RGBNormColor {
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        RGBNormColor { r, g, b }
+    }
+
+    pub fn to_tuple(&self) -> (f32, f32, f32) {
         (self.r, self.g, self.b)
     }
 }
 
-impl Color for ColorRGB {
-    fn rgb(&self) -> ColorRGB { *self }
+impl Color for RGBNormColor {
+    fn rgb24(&self) -> RGB24Color {
+        let (r, g, b) = self.to_tuple();
+        RGB24Color::new((255.0 * r) as u8, (255.0 * g) as u8, (255.0 * b) as u8)
+    }
+    fn rgb_norm(&self) -> RGBNormColor { *self }
 
-    fn hsv(&self) -> ColorHSV {
-        let (r, g, b) =
-            (self.r as f32 / 255.0,
-             self.g as f32 / 255.0,
-             self.b as f32 / 255.0);
+    fn hsv(&self) -> HSVColor {
+        let (r, g, b) = self.to_tuple();
 
         let max = r.max(g).max(b);
         let min = r.min(g).min(b);
@@ -254,26 +303,24 @@ impl Color for ColorRGB {
                 (r - g) / delta + 4.0
             };
 
-        ColorHSV::new(hue, saturation, value)
+        HSVColor::new(hue, saturation, value)
     }
 }
 
-impl fmt::Display for ColorRGB {
+impl fmt::Display for RGBNormColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
+        write!(f, "{:>5.1}%, {:>5.1}%, {:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
-pub struct ColorHSV {
-    pub h: f32,
-    pub s: f32,
-    pub v: f32,
-    // this is so we have to use the constructor `new`
-    _void: (),
+pub struct HSVColor {
+    h: f32,
+    s: f32,
+    v: f32,
 }
 
-impl ColorHSV {
+impl HSVColor {
     /// Create a new HSV value.
     ///
     /// Hue is given in degrees and it is wrapped between [0, 360).
@@ -293,7 +340,7 @@ impl ColorHSV {
         if h < 0.0 {
             h = h + 360.0;
         }
-        ColorHSV {h, s, v, _void: ()}
+        HSVColor { h, s, v }
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) {
@@ -301,8 +348,12 @@ impl ColorHSV {
     }
 }
 
-impl Color for ColorHSV {
-    fn rgb(&self) -> ColorRGB {
+impl Color for HSVColor {
+    fn rgb24(&self) -> RGB24Color {
+        self.rgb_norm().rgb24()
+    }
+
+    fn rgb_norm(&self) -> RGBNormColor {
         let (h, s, v) = self.to_tuple();
         let h = h / 60.0;
 
@@ -326,20 +377,16 @@ impl Color for ColorHSV {
                 _   => panic!("Invalid hue value: {}", self.h)
             };
 
-        let (r, g, b) =
-            ((r+min) as u8,
-             (g+min) as u8,
-             (b+min) as u8);
+        let (r, g, b) = (r+min, g+min, b+min);
 
-        ColorRGB{ r, g, b }
+        RGBNormColor { r, g, b }
     }
 
-    fn hsv(&self) -> ColorHSV { *self }
+    fn hsv(&self) -> HSVColor { *self }
 
 }
-impl fmt::Display for ColorHSV {
+impl fmt::Display for HSVColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>width$.precision$}°, {:>width$.precision$}%, {:>width$.precision$}%",
-               self.h, self.s * 100.0, self.v * 100.0, width=5, precision=1)
+        write!(f, "{:>5.1}°, {:>5.1}%, {:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)
     }
 }
