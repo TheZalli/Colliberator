@@ -63,7 +63,7 @@ pub trait Color {
         // they could be improved
 
         // how many degrees from the main hue can a shade be
-        const HUE_MARGIN: f32 = 60 * 0.75;
+        const HUE_MARGIN: f32 = 60.0 * 0.75;
 
         // HSV value under this value is considered to be just black
         const BLACK_CUTOFF_VALUE: f32 = 0.07;
@@ -114,16 +114,32 @@ pub trait Color {
         if v <= BLACK_VALUE {
             shades.push((Black, 1.0));
         } else if v >= WHITE_VALUE && s <= WHITE_SATURATION {
-            let amount = 1.0 - (WHITE_SATURATION - s) / WHITE_SATURATION;
-            shades.push((White, amount));
+            //let amount = 1.0 - (WHITE_SATURATION - s) / WHITE_SATURATION;
+            shades.push((White, 1.0));
         }
 
         if s <= GREY_SATURATION && v <= GREY_VALUE_MAX && v >= GREY_VALUE_MIN {
-            let amount = 1.0 - (GREY_SATURATION - s) / GREY_SATURATION;
-            shades.push((Grey, amount));
+            //let amount = 1.0 - (GREY_SATURATION - s) / GREY_SATURATION;
+            shades.push((Grey, 1.0));
         }
 
         return shades;
+    }
+
+    /// Returns the `text` with this color as it's background color.
+    fn ansi_escape_bgcolor(&self, text: &str) -> String {
+        const CSI: &str = "\u{1B}[";
+        let (r, g, b) = self.rgb().to_tuple();
+
+        // color the text as black or white depending on the bg:s lightness
+        let fg =
+            if self.v() < 0.5 {
+                format!("{}38;2;255;255;255m", CSI)
+            } else {
+                format!("{}38;2;;;m", CSI)
+            };
+
+        fg + &format!("{}48;2;{};{};{}m{}{0}0m", CSI, r, g, b, text)
     }
 }
 
