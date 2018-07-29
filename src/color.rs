@@ -359,13 +359,9 @@ impl Color for HSVColor {
         let (h, s, v) = self.to_tuple();
         let h = h / 60.0;
 
-        // chroma, largest component
+        // largest, second largest and the smallest component
         let c = s * v;
-
-        // second largest component
         let x = c * (1.0 - (h % 2.0 - 1.0).abs());
-
-        // smallest component
         let min = v - c;
 
         let (r, g, b) =

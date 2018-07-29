@@ -123,17 +123,20 @@ impl ColorInfo {
 
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "rgb: ({}), hsv: ({}), is shades of", self.rgb, self.hsv)?;
+        write!(f, "rgb: ({}), hsv: ({}), ", self.rgb, self.hsv)?;
 
-        let mut fun = |color, _weight, sep| write!(f, " {}{}", color, sep);
+        let fun = |f: &mut fmt::Formatter, color, _weight, sep| write!(f, " {}{}", color, sep);
         let (last, shades) = self.shades_of.split_last().unwrap();
 
         if let Some((last2nd, shades)) = shades.split_last() {
+            write!(f, "is shades of")?;
             for (color, weight) in shades.iter() {
-                fun(*color, *weight, ",")?;
+                fun(f, *color, *weight, ",")?;
             }
-            fun(last2nd.0, last2nd.1, " and")?;
+            fun(f, last2nd.0, last2nd.1, " and")?;
+        } else {
+            write!(f, "is a shade of")?;
         }
-        fun(last.0, last.1, ".")
+        fun(f, last.0, last.1, ".")
     }
 }
