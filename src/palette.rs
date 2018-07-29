@@ -2,7 +2,7 @@ use std::fmt;
 use std::path::Path;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::collections::{HashMap, BTreeMap};
+use std::collections::BTreeMap;
 use std::iter::Iterator;
 
 use regex::Regex;
@@ -11,9 +11,8 @@ use error::PaletteError;
 use color::*;
 
 lazy_static! {
-    static ref SETNAME_RE: Regex = Regex::new(r"^(.*?):").unwrap();
-    static ref COLORLINE_RE: Regex =
-        Regex::new(r"^\*\s*([^#]+?)\s*#([0-9a-fA-F]{6})").unwrap();
+    static ref SETNAME_RE: Regex =      Regex::new(r"^(.*?):").unwrap();
+    static ref COLORLINE_RE: Regex =    Regex::new(r"^\*\s*([^#]+?)\s*#([0-9a-fA-F]{6})").unwrap();
 }
 
 #[derive(Debug)]
@@ -22,13 +21,8 @@ pub struct ColorSet {
 }
 
 impl ColorSet {
-    fn new(colors: Box<[RGB24Color]>) -> Self {
-        ColorSet{ colors }
-    }
-
-    pub fn iter<'a>(&'a self) -> ColorSetIter<'a> {
-        ColorSetIter(self.colors.iter().cloned())
-    }
+    fn new(colors: Box<[RGB24Color]>) -> Self { ColorSet{ colors } }
+    pub fn iter<'a>(&'a self) -> ColorSetIter<'a> { ColorSetIter(self.colors.iter().cloned()) }
 }
 
 pub struct ColorSetIter<'a>(
@@ -37,16 +31,13 @@ pub struct ColorSetIter<'a>(
 
 impl<'a> Iterator for ColorSetIter<'a> {
     type Item = RGB24Color;
-
-    fn next(&mut self) -> Option<RGB24Color> {
-        self.0.next()
-    }
+    fn next(&mut self) -> Option<RGB24Color> { self.0.next() }
 }
 
 #[derive(Debug)]
 pub struct Palette {
     colors: BTreeMap<RGB24Color, Box<str>>,
-    colorsets: HashMap<Box<str>, ColorSet>,
+    colorsets: Vec<(Box<str>, ColorSet)>,
 }
 
 impl Palette {
@@ -57,33 +48,25 @@ impl Palette {
 
     pub fn parse<T: BufRead>(input: T) -> Result<Self, PaletteError> {
         let mut colors = BTreeMap::new();
-
-        let mut colorsets = HashMap::new();
-        let mut current_colorset_name: Box<str> = "".into();
+        let mut colorsets = Vec::new();
 
         for line in input.lines() {
             let line = line?;
             if let Some(capt) = SETNAME_RE.captures(&line) {
                 // we got a color set name
-
-                current_colorset_name = capt[1].into();
-
+                colorsets.push((capt[1].into(), Vec::new()));
             } else if let Some(capt) = COLORLINE_RE.captures(&line) {
                 // we got a color
-
                 let mut colname: Box<str> = capt[1].into();
                 colname.make_ascii_lowercase();
-                let colname: Box<str> = colname;
 
                 let rgb = unsafe { RGB24Color::from_hex_unchecked(capt[2].into()) };
 
-                if current_colorset_name.as_ref() == "" {
+                if colorsets.is_empty() {
                     return Err(PaletteError::ColorWithoutSet { name: colname });
                 }
-
                 // record color set data
-                colorsets.entry(current_colorset_name.clone()).or_insert(Vec::new()).push(rgb);
-
+                colorsets.last_mut().unwrap().1.push(rgb);
                 // record the color itself
                 colors.insert(rgb, colname);
             } else {
@@ -91,9 +74,7 @@ impl Palette {
                 continue;
             }
         }
-
         let colorsets = colorsets.into_iter().map(|(k, v)| (k, ColorSet::new(v.into()))).collect();
-
         Ok(Palette { colors, colorsets })
     }
 
@@ -113,7 +94,7 @@ impl Palette {
 }
 
 pub struct ColorSetsIter<'a>(
-    ::std::collections::hash_map::Iter<'a, Box<str>, ColorSet>
+    ::std::slice::Iter<'a, (Box<str>, ColorSet)>
 );
 
 impl<'a> Iterator for ColorSetsIter<'a> {
@@ -142,12 +123,17 @@ impl ColorInfo {
 
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "rgb: ({}), hsv: ({}), is shades of [", self.rgb, self.hsv)?;
+        write!(f, "rgb: ({}), hsv: ({}), is shades of", self.rgb, self.hsv)?;
 
-        for (color, weight) in self.shades_of.iter() {
-            write!(f, " {} ({:.2}),", color, weight)?;
+        let mut fun = |color, _weight, sep| write!(f, " {}{}", color, sep);
+        let (last, shades) = self.shades_of.split_last().unwrap();
+
+        if let Some((last2nd, shades)) = shades.split_last() {
+            for (color, weight) in shades.iter() {
+                fun(*color, *weight, ",")?;
+            }
+            fun(last2nd.0, last2nd.1, " and")?;
         }
-
-        write!(f, "].")
+        fun(last.0, last.1, ".")
     }
 }

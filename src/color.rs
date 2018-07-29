@@ -90,13 +90,14 @@ pub trait Color {
 
         assert!(GREYSCALE_SATURATION <= WHITE_SATURATION);
         assert!(GREYSCALE_SATURATION <= GREY_SATURATION);
-
         let mut shades = Vec::with_capacity(3);
         let (h, s, v) = self.hsv().to_tuple();
 
         if v < BLACK_CUTOFF_VALUE {
             return vec![(Black, 1.0)];
         }
+
+        let mut sum = 0.0;
 
         if s > GREYSCALE_SATURATION {
             // red is a special case
@@ -108,29 +109,39 @@ pub trait Color {
                         h - 360.0
                     } / HUE_MARGIN;
 
+                sum += amount;
                 shades.push((Red, amount));
             }
             for (hue, color) in COLOR_HUES.iter() {
                 let dist = (h - hue).abs();
                 if dist <= HUE_MARGIN {
-                    shades.push((*color, 1.0 - dist / HUE_MARGIN));
+                    let amount = 1.0 - dist / HUE_MARGIN;
+                    sum += amount;
+                    shades.push((*color, amount));
                 }
             }
         }
 
         if v <= BLACK_VALUE {
+            sum += 1.0;
             shades.push((Black, 1.0));
         } else if v >= WHITE_VALUE && s <= WHITE_SATURATION {
             //let amount = 1.0 - (WHITE_SATURATION - s) / WHITE_SATURATION;
+            sum += 1.0;
             shades.push((White, 1.0));
         }
 
         if s <= GREY_SATURATION && v <= GREY_VALUE_MAX && v >= GREY_VALUE_MIN {
             //let amount = 1.0 - (GREY_SATURATION - s) / GREY_SATURATION;
+            sum += 1.0;
             shades.push((Grey, 1.0));
         }
+        // sort and normalize
+        shades.sort_unstable_by(
+            |(_, amount), (_, amount2)| amount2.partial_cmp(amount).unwrap()
+        );
 
-        return shades;
+        return shades.iter_mut().map(|(color, amount)| (*color, *amount/sum)).collect();
     }
 
     /// Returns the `text` with this color as it's background color.
@@ -168,9 +179,7 @@ impl Color for BaseColor {
         }
     }
 
-    fn rgb_norm(&self) -> RGBNormColor {
-        self.rgb24().rgb_norm()
-    }
+    fn rgb_norm(&self) -> RGBNormColor { self.rgb24().rgb_norm() }
 
     fn hsv(&self) -> HSVColor {
         use self::BaseColor::*;
@@ -284,14 +293,7 @@ impl Color for RGBNormColor {
         let delta = max - min;
 
         let value = max;
-
-        let saturation =
-            if max == 0.0 {
-                0.0
-            } else {
-                delta / max
-            };
-
+        let saturation = if max == 0.0 { 0.0 } else { delta / max };
         let hue = 60.0 *
             if delta == 0.0 {
                 0.0
@@ -317,7 +319,7 @@ impl fmt::Display for RGBNormColor {
 pub struct HSVColor {
     h: f32,
     s: f32,
-    v: f32,
+    v: f32
 }
 
 impl HSVColor {
