@@ -1,3 +1,15 @@
+Base colors:
+* Bright white      #ffffff
+* Pitch black       #000000
+* Pure red          #ff0000
+* Pure orange       #ff8000
+* Pure yellow       #ffff00
+* Pure green        #00ff00
+* Pure cyan         #00ffff
+* Pure blue         #0000ff
+* Pure violet       #8000ff
+* Pure magenta      #ff00ff
+
 Greyscale:
 * White             #f0f0f0, 94%
 * Light grey        #999999, 60%
@@ -19,30 +31,15 @@ Cool greyscale:
 * Jaguar            #20202e
 * Night sky         #0f0f1c
 
-Base greyscale:
-* Bright white      #ffffff
-* Middle grey       #808080
-* Pitch black       #000000
-
-Base colors:
-* Red               #d92323
-* Orange            #ec9523
-* Yellow            #eeee13
-* Green             #35cf2e
-* Cyan              #1ee5e5
-* Blue              #2424d1
+Basic colors:
+* Red               #d92923
+* Orange            #ec8b23
+* Yellow            #eee313
+* Green             #38cc2d
+* Cyan              #1ed4e5
+* Blue              #282bd4
 * Violet            #7a0cc6
 * Magenta           #f116c8
-
-Saturated colors:
-* Pure red          #ff0000
-* Pure orange       #ff8000
-* Pure yellow       #ffff00
-* Pure green        #00ff00
-* Pure cyan         #00ffff
-* Pure blue         #0000ff
-* Pure violet       #8000ff
-* Pure magenta      #ff00ff
 
 Pastel colors:
 * Pink              #ff95bf
@@ -55,7 +52,7 @@ Pastel colors:
 * Flamingo          #f979da
 
 Murky colors:
-* Blood             #66130a
+* Blood             #a52318
 * Brown             #964B00
 * Sand              #b8ac43
 * Avocado           #427515
