@@ -26,18 +26,31 @@ Greyscale:
 * Pitch black       #000000, 0%
 
 Warm greyscale:
+* wg0
 * Sun               #fff9e0
+* wg1
+* wg2
 * Sandstone         #b5a896
+* wg3               #9a8f80
+* wg4               #81786b
+* wg5               #676056
 * Taupe             #4d4841
 * Shadow            #29271b
+* wg6               #1e1c0f
 * Licorice          #141002
 
 Cool greyscale:
 * Moon              #ebebff
-* Concrete          #a0a0ad
-* Charcoal          #444457
-* Jaguar            #20202e
-* Night sky         #0f0f1c
+* Ash               #d0d6db
+* Concrete          #adb2c4
+* Cool grey         #9999bf
+* Light slate grey  #868aa5
+* Slate grey        #6c7582
+* Gunmetal grey     #546167
+* Charcoal          #363a47
+* Jaguar            #262938
+* Night sky         #1a1c29
+* Onyx              #120e1a
 
 Basic colors:
 * Red               #d92923
