@@ -3,13 +3,8 @@ use std::fmt;
 
 const GAMMA: f32 = 2.4;
 
-fn gamma_encode(linear: f32) -> f32 {
-    linear.powf(1.0/GAMMA)
-}
-
-fn gamma_decode(encoded: f32) -> f32 {
-    encoded.powf(GAMMA)
-}
+#[inline] fn gamma_encode(linear: f32) -> f32 { linear.powf(1.0/GAMMA) }
+#[inline] fn gamma_decode(encoded: f32) -> f32 { encoded.powf(GAMMA) }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// The basic colors of the rainbow
@@ -60,6 +55,15 @@ pub trait Color {
 
     /// Return the HSV representation
     fn hsv(&self) -> HSVColor { self.srgb().hsv() }
+
+    /// Returns the relative luminance of this color between 0 and 1.
+    ///
+    /// Tells the whiteness of the color as perceived by humans.
+    /// Values nearer 0 are darker, and values nearer 1 are lighter.
+    fn relative_luminance(&self) -> f32 {
+        let (r, g, b) = self.lin_rgb().to_tuple();
+        0.2126*r + 0.7152*g + 0.0722*b
+    }
 
     /// Categorize this color's most prominent shades
     fn shades(&self) ->  Vec<(BaseColor, f32)> {
@@ -156,9 +160,8 @@ pub trait Color {
         let (r, g, b) = self.srgb24().to_tuple();
 
         // color the text as black or white depending on the bg:s lightness
-        // TODO: use relative luminance
         let fg =
-            if self.hsv().v < 0.5 {
+            if self.relative_luminance() < gamma_decode(0.5) {
                 format!("{}38;2;255;255;255m", CSI)
             } else {
                 format!("{}38;2;;;m", CSI)
