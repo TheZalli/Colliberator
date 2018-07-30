@@ -151,7 +151,7 @@ pub trait Color {
     }
 
     /// Returns the `text` with this color as it's background color using ANSI escapes.
-    fn ansi_escape_bgcolor(&self, text: &str) -> String {
+    fn ansi_bgcolor(&self, text: &str) -> String {
         const CSI: &str = "\u{1B}[";
         let (r, g, b) = self.srgb24().to_tuple();
 
