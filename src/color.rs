@@ -1,6 +1,16 @@
 use std::str;
 use std::fmt;
 
+const GAMMA: f32 = 2.4;
+
+fn gamma_encode(linear: f32) -> f32 {
+    linear.powf(1.0/GAMMA)
+}
+
+fn gamma_decode(encoded: f32) -> f32 {
+    encoded.powf(GAMMA)
+}
+
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// The basic colors of the rainbow
 pub enum BaseColor {
@@ -36,24 +46,20 @@ impl fmt::Display for BaseColor {
 }
 
 pub trait Color {
-    /// Return the 24-bit RGB representation
-    fn rgb24(&self) -> RGB24Color;
-    fn r8(&self) -> u8 { self.rgb24().r }
-    fn g8(&self) -> u8 { self.rgb24().g }
-    fn b8(&self) -> u8 { self.rgb24().b }
+    /// Return the 24-bit RGB representation in the linear color space
+    fn rgb24(&self) -> LinRGB24Color;
 
-    /// Return the normalised RGB representation
-    fn rgb_norm(&self) -> RGBNormColor;
+    /// Return the normalised RGB representation in the linear color space
+    fn rgb_norm(&self) -> LinRGBColor;
 
-    fn rn(&self) -> f32 { self.rgb_norm().r }
-    fn gn(&self) -> f32 { self.rgb_norm().g }
-    fn bn(&self) -> f32 { self.rgb_norm().b }
+    /// Returns this color in the 24-bit sRGB color space
+    fn srgb24(&self) -> SRGB24Color { self.srgb().srgb24() }
+
+    /// Returns this color in the normalized sRGB color space
+    fn srgb(&self) -> SRGBColor { self.rgb_norm().srgb() }
 
     /// Return the HSV representation
     fn hsv(&self) -> HSVColor;
-    fn h(&self) -> f32 { self.hsv().h }
-    fn s(&self) -> f32 { self.hsv().s }
-    fn v(&self) -> f32 { self.hsv().v }
 
     /// Categorize this color's most prominent shades
     fn shades(&self) ->  Vec<(BaseColor, f32)> {
@@ -144,14 +150,15 @@ pub trait Color {
         return shades.iter_mut().map(|(color, amount)| (*color, *amount/sum)).collect();
     }
 
-    /// Returns the `text` with this color as it's background color.
+    /// Returns the `text` with this color as it's background color using ANSI escapes.
     fn ansi_escape_bgcolor(&self, text: &str) -> String {
         const CSI: &str = "\u{1B}[";
         let (r, g, b) = self.rgb24().to_tuple();
 
         // color the text as black or white depending on the bg:s lightness
+        // TODO: use relative luminance
         let fg =
-            if self.v() < 0.5 {
+            if self.hsv().v < 0.5 {
                 format!("{}38;2;255;255;255m", CSI)
             } else {
                 format!("{}38;2;;;m", CSI)
@@ -162,10 +169,10 @@ pub trait Color {
 }
 
 impl Color for BaseColor {
-    fn rgb24(&self) -> RGB24Color {
+    fn rgb24(&self) -> LinRGB24Color {
         use self::BaseColor::*;
 
-        let f = &RGB24Color::new;
+        let f = &LinRGB24Color::new;
         match self {
             Black   => f(  0,   0,   0),
             Grey    => f(128, 128, 128),
@@ -179,7 +186,7 @@ impl Color for BaseColor {
         }
     }
 
-    fn rgb_norm(&self) -> RGBNormColor { self.rgb24().rgb_norm() }
+    fn rgb_norm(&self) -> LinRGBColor { self.rgb24().rgb_norm() }
 
     fn hsv(&self) -> HSVColor {
         use self::BaseColor::*;
@@ -201,21 +208,18 @@ impl Color for BaseColor {
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// A 24-bit color with red, green and blue channels.
-pub struct RGB24Color {
-    r: u8,
-    g: u8,
-    b: u8
+pub struct LinRGB24Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
 }
 
-impl RGB24Color {
+impl LinRGB24Color {
     /// Create a new RGB color.
-    pub fn new(r: u8, g: u8, b: u8) -> Self {
-        RGB24Color { r, g, b }
-    }
+    pub fn new(r: u8, g: u8, b: u8) -> Self { LinRGB24Color { r, g, b } }
 
-    pub fn to_tuple(&self) -> (u8, u8, u8) {
-        (self.r, self.g, self.b)
-    }
+    /// Destructure self into a tuple
+    pub fn to_tuple(&self) -> (u8, u8, u8) { (self.r, self.g, self.b) }
 
     /// Create `ColorRGB` from a hexcode.
     ///
@@ -233,7 +237,7 @@ impl RGB24Color {
         let h = hex_str.as_bytes_mut();
         h.make_ascii_lowercase();
 
-        RGB24Color {
+        LinRGB24Color {
             r: f(h[0], h[1]),
             g: f(h[2], h[3]),
             b: f(h[4], h[5]),
@@ -241,20 +245,18 @@ impl RGB24Color {
     }
 }
 
-impl Color for RGB24Color {
-    fn rgb24(&self) -> RGB24Color { *self }
+impl Color for LinRGB24Color {
+    fn rgb24(&self) -> LinRGB24Color { *self }
 
-    fn rgb_norm(&self) -> RGBNormColor {
+    fn rgb_norm(&self) -> LinRGBColor {
         let (r, g, b) = self.to_tuple();
-        RGBNormColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+        LinRGBColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
     }
 
-    fn hsv(&self) -> HSVColor {
-        self.rgb_norm().hsv()
-    }
+    fn hsv(&self) -> HSVColor { self.rgb_norm().hsv() }
 }
 
-impl fmt::Display for RGB24Color {
+impl fmt::Display for LinRGB24Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
     }
@@ -262,15 +264,15 @@ impl fmt::Display for RGB24Color {
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 /// An RGB color with channels normalized between 0 and 1.
-pub struct RGBNormColor {
-    r: f32,
-    g: f32,
-    b: f32
+pub struct LinRGBColor {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32
 }
 
-impl RGBNormColor {
+impl LinRGBColor {
     pub fn new(r: f32, g: f32, b: f32) -> Self {
-        RGBNormColor { r, g, b }
+        LinRGBColor { r, g, b }
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) {
@@ -278,12 +280,27 @@ impl RGBNormColor {
     }
 }
 
-impl Color for RGBNormColor {
-    fn rgb24(&self) -> RGB24Color {
+impl Color for LinRGBColor {
+    fn rgb24(&self) -> LinRGB24Color {
         let (r, g, b) = self.to_tuple();
-        RGB24Color::new((255.0 * r) as u8, (255.0 * g) as u8, (255.0 * b) as u8)
+        LinRGB24Color::new((255.0 * r) as u8, (255.0 * g) as u8, (255.0 * b) as u8)
     }
-    fn rgb_norm(&self) -> RGBNormColor { *self }
+
+    fn rgb_norm(&self) -> LinRGBColor { *self }
+
+    fn srgb(&self) -> SRGBColor {
+        const SRGB_CUTOFF: f32 = 0.0031308;
+
+        let encode = |linear|
+            if linear <= SRGB_CUTOFF {
+                linear * 12.92
+            } else {
+                gamma_encode(linear) * 1.055 - 0.055
+            };
+
+        let (r, g, b) = self.to_tuple();
+        SRGBColor::new(encode(r), encode(g), encode(b))
+    }
 
     fn hsv(&self) -> HSVColor {
         let (r, g, b) = self.to_tuple();
@@ -309,17 +326,107 @@ impl Color for RGBNormColor {
     }
 }
 
-impl fmt::Display for RGBNormColor {
+impl fmt::Display for LinRGBColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>5.1}%, {:>5.1}%, {:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
     }
 }
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+/// An RGB color with channels normalized between 0 and 1 in the sRGB space.
+pub struct SRGBColor {
+    r: f32,
+    g: f32,
+    b: f32
+}
+
+impl SRGBColor {
+    pub fn new(r: f32, g: f32, b: f32) -> Self { SRGBColor { r, g, b } }
+    pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }
+}
+
+impl Color for SRGBColor {
+    fn rgb24(&self) -> LinRGB24Color { self.rgb_norm().rgb24() }
+
+    fn rgb_norm(&self) -> LinRGBColor {
+        const SRGB_INV_CUTOFF: f32 = 0.04045;
+
+        let decode = |encoded|
+            if encoded <= SRGB_INV_CUTOFF {
+                encoded / 12.92
+            } else {
+                gamma_decode((encoded + 0.055)/1.055)
+            };
+
+        let (r, g, b) = self.to_tuple();
+        LinRGBColor::new(decode(r), decode(g), decode(b))
+    }
+
+    fn srgb24(&self) -> SRGB24Color {
+        let (r, g, b) = self.to_tuple();
+        SRGB24Color::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
+    }
+
+    fn srgb(&self) -> SRGBColor { *self }
+
+    fn hsv(&self) -> HSVColor { self.rgb_norm().hsv() }
+}
+
+impl fmt::Display for SRGBColor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>5.1}%, {:>5.1}%, {:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
+    }
+}
+
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+/// A 24-bit color with red, green and blue channels in the sRGB color space.
+pub struct SRGB24Color {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8
+}
+
+impl SRGB24Color {
+    /// Create a new sRGB color.
+    pub fn new(r: u8, g: u8, b: u8) -> Self { SRGB24Color { r, g, b } }
+
+    /// Destructure self into a tuple
+    pub fn to_tuple(&self) -> (u8, u8, u8) { (self.r, self.g, self.b) }
+}
+
+impl Color for SRGB24Color {
+    fn rgb24(&self) -> LinRGB24Color {
+        self.srgb().rgb24()
+    }
+
+    fn rgb_norm(&self) -> LinRGBColor {
+        self.srgb().rgb_norm()
+    }
+
+    fn srgb24(&self) -> SRGB24Color { *self }
+
+    fn srgb(&self) -> SRGBColor {
+        let (r, g, b) = self.to_tuple();
+        SRGBColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+    }
+
+    fn hsv(&self) -> HSVColor {
+        self.srgb().hsv()
+    }
+}
+
+impl fmt::Display for SRGB24Color {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct HSVColor {
-    h: f32,
-    s: f32,
-    v: f32
+    pub h: f32,
+    pub s: f32,
+    pub v: f32,
+    _priv: ()
 }
 
 impl HSVColor {
@@ -342,7 +449,7 @@ impl HSVColor {
         if h < 0.0 {
             h = h + 360.0;
         }
-        HSVColor { h, s, v }
+        HSVColor { h, s, v, _priv: () }
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) {
@@ -351,11 +458,11 @@ impl HSVColor {
 }
 
 impl Color for HSVColor {
-    fn rgb24(&self) -> RGB24Color {
+    fn rgb24(&self) -> LinRGB24Color {
         self.rgb_norm().rgb24()
     }
 
-    fn rgb_norm(&self) -> RGBNormColor {
+    fn rgb_norm(&self) -> LinRGBColor {
         let (h, s, v) = self.to_tuple();
         let h = h / 60.0;
 
@@ -377,7 +484,7 @@ impl Color for HSVColor {
 
         let (r, g, b) = (r+min, g+min, b+min);
 
-        RGBNormColor { r, g, b }
+        LinRGBColor { r, g, b }
     }
 
     fn hsv(&self) -> HSVColor { *self }

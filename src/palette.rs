@@ -17,26 +17,26 @@ lazy_static! {
 
 #[derive(Debug)]
 pub struct ColorSet {
-    colors: Box<[RGB24Color]>,
+    colors: Box<[LinRGB24Color]>,
 }
 
 impl ColorSet {
-    fn new(colors: Box<[RGB24Color]>) -> Self { ColorSet{ colors } }
+    fn new(colors: Box<[LinRGB24Color]>) -> Self { ColorSet{ colors } }
     pub fn iter<'a>(&'a self) -> ColorSetIter<'a> { ColorSetIter(self.colors.iter().cloned()) }
 }
 
 pub struct ColorSetIter<'a>(
-    ::std::iter::Cloned<::std::slice::Iter<'a, RGB24Color>>
+    ::std::iter::Cloned<::std::slice::Iter<'a, LinRGB24Color>>
 );
 
 impl<'a> Iterator for ColorSetIter<'a> {
-    type Item = RGB24Color;
-    fn next(&mut self) -> Option<RGB24Color> { self.0.next() }
+    type Item = LinRGB24Color;
+    fn next(&mut self) -> Option<LinRGB24Color> { self.0.next() }
 }
 
 #[derive(Debug)]
 pub struct Palette {
-    colors: BTreeMap<RGB24Color, Box<str>>,
+    colors: BTreeMap<LinRGB24Color, Box<str>>,
     colorsets: Vec<(Box<str>, ColorSet)>,
 }
 
@@ -60,7 +60,7 @@ impl Palette {
                 let mut colname: Box<str> = capt[1].into();
                 colname.make_ascii_lowercase();
 
-                let rgb = unsafe { RGB24Color::from_hex_unchecked(capt[2].into()) };
+                let rgb = unsafe { LinRGB24Color::from_hex_unchecked(capt[2].into()) };
 
                 if colorsets.is_empty() {
                     return Err(PaletteError::ColorWithoutSet { name: colname });
@@ -90,7 +90,6 @@ impl Palette {
     pub fn name_color<T: Color>(&self, color: T) -> Option<&str> {
         Some(self.colors.get(&color.rgb24())?.as_ref())
     }
-
 }
 
 pub struct ColorSetsIter<'a>(
@@ -106,15 +105,17 @@ impl<'a> Iterator for ColorSetsIter<'a> {
 
 #[derive(Debug)]
 pub struct ColorInfo {
-    pub rgb: RGB24Color,
-    pub hsv: HSVColor,
-    pub shades_of: Vec<(BaseColor, f32)>,
+    rgb: LinRGB24Color,
+    srgb: SRGB24Color,
+    hsv: HSVColor,
+    shades_of: Vec<(BaseColor, f32)>,
 }
 
 impl ColorInfo {
     pub fn new<T: Color>(color: T) -> Self {
         ColorInfo {
             rgb: color.rgb24(),
+            srgb: color.srgb24(),
             hsv: color.hsv(),
             shades_of: color.shades(),
         }
@@ -123,7 +124,7 @@ impl ColorInfo {
 
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "rgb: ({}), hsv: ({}), ", self.rgb, self.hsv)?;
+        write!(f, "rgb: ({}), srgb; ({}), hsv: ({}), ", self.rgb, self.srgb, self.hsv)?;
 
         let fun = |f: &mut fmt::Formatter, color, _weight, sep| write!(f, " {}{}", color, sep);
         let (last, shades) = self.shades_of.split_last().unwrap();
