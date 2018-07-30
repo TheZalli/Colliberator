@@ -82,28 +82,28 @@ pub trait Color {
         // how many degrees from the main hue can a shade be
         const HUE_MARGIN: f32 = 60.0 * 0.75;
 
-        // HSV value under this value is considered to be just black
-        const BLACK_CUTOFF_VALUE: f32 = 0.07;
+        // relative luminance under this value is considered to be just black
+        const BLACK_CUTOFF_LUMINANCE: f32 = 0.005;
 
         // saturation under this value is considered to be just greyscale without any color
         const GREYSCALE_SATURATION: f32 = 0.05;
 
-        // saturation and value borders for the greyscale shades
+        // borders for the greyscale shades
         const WHITE_SATURATION: f32 = 0.35;
-        const WHITE_VALUE: f32 = 0.60;
+        const WHITE_LUMINANCE: f32 = 0.40;
 
         const GREY_SATURATION: f32 = 0.45;
-        const GREY_VALUE_MAX: f32 = 0.80;
-        const GREY_VALUE_MIN: f32 = 0.15;
+        const GREY_LUMINANCE_MAX: f32 = 0.80;
+        const GREY_LUMINANCE_MIN: f32 = 0.03;
 
-        const BLACK_VALUE: f32 = 0.25;
+        const BLACK_LUMINANCE: f32 = 0.045;
 
-        assert!(GREYSCALE_SATURATION <= WHITE_SATURATION);
-        assert!(GREYSCALE_SATURATION <= GREY_SATURATION);
         let mut shades = Vec::with_capacity(3);
-        let (h, s, v) = self.hsv().to_tuple();
 
-        if v < BLACK_CUTOFF_VALUE {
+        let (h, s, _v) = self.hsv().to_tuple();
+        let lum = self.relative_luminance();
+
+        if lum < BLACK_CUTOFF_LUMINANCE {
             return vec![(Black, 1.0)];
         }
 
@@ -132,16 +132,16 @@ pub trait Color {
             }
         }
 
-        if v <= BLACK_VALUE {
+        if lum <= BLACK_LUMINANCE {
             sum += 1.0;
             shades.push((Black, 1.0));
-        } else if v >= WHITE_VALUE && s <= WHITE_SATURATION {
+        } else if lum >= WHITE_LUMINANCE && s <= WHITE_SATURATION {
             //let amount = 1.0 - (WHITE_SATURATION - s) / WHITE_SATURATION;
             sum += 1.0;
             shades.push((White, 1.0));
         }
 
-        if s <= GREY_SATURATION && v <= GREY_VALUE_MAX && v >= GREY_VALUE_MIN {
+        if s <= GREY_SATURATION && lum <= GREY_LUMINANCE_MAX && lum >= GREY_LUMINANCE_MIN {
             //let amount = 1.0 - (GREY_SATURATION - s) / GREY_SATURATION;
             sum += 1.0;
             shades.push((Grey, 1.0));

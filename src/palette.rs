@@ -124,7 +124,8 @@ impl ColorInfo {
 
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "sRGB: ({}), HSV: ({}), ", self.srgb, self.hsv)?;
+        write!(f, "sRGB: ({}), HSV: ({}), lum: {:3.0}%, ",
+               self.srgb, self.hsv, 100.0 * self.lin_rgb.relative_luminance())?;
 
         let fun = |f: &mut fmt::Formatter, color, _weight, sep| write!(f, " {}{}", color, sep);
         let (last, shades) = self.shades_of.split_last().unwrap();
