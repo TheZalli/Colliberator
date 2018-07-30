@@ -3,8 +3,25 @@ use std::fmt;
 
 const GAMMA: f32 = 2.4;
 
-#[inline] fn gamma_encode(linear: f32) -> f32 { linear.powf(1.0/GAMMA) }
-#[inline] fn gamma_decode(encoded: f32) -> f32 { encoded.powf(GAMMA) }
+/// Gamma encodes a linear value into the sRGB space
+pub fn gamma_encode(linear: f32) -> f32 {
+    const SRGB_CUTOFF: f32 = 0.0031308;
+    if linear <= SRGB_CUTOFF {
+        linear * 12.92
+    } else {
+        linear.powf(1.0/GAMMA) * 1.055 - 0.055
+    }
+}
+
+/// Gamma decodes an sRGB value into the linear space
+pub fn gamma_decode(encoded: f32) -> f32 {
+    const SRGB_INV_CUTOFF: f32 = 0.04045;
+    if encoded <= SRGB_INV_CUTOFF {
+        encoded / 12.92
+    } else {
+        ((encoded + 0.055)/1.055).powf(GAMMA)
+    }
+}
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// The basic colors of the rainbow
@@ -63,6 +80,13 @@ pub trait Color {
     fn relative_luminance(&self) -> f32 {
         let (r, g, b) = self.lin_rgb().to_tuple();
         0.2126*r + 0.7152*g + 0.0722*b
+    }
+
+    /// Same as `relative_luminance`, but the values are gamma compressed.
+    ///
+    /// Uses the same gamma encoding function as linear RGB to sRGB conversion.
+    fn gamma_relative_luminance(&self) -> f32 {
+        gamma_encode(self.relative_luminance())
     }
 
     /// Categorize this color's most prominent shades
@@ -231,17 +255,8 @@ impl Color for SRGBColor {
     }
 
     fn lin_rgb(&self) -> LinRGBColor {
-        const SRGB_INV_CUTOFF: f32 = 0.04045;
-
-        let decode = |encoded|
-            if encoded <= SRGB_INV_CUTOFF {
-                encoded / 12.92
-            } else {
-                gamma_decode((encoded + 0.055)/1.055)
-            };
-
         let (r, g, b) = self.to_tuple();
-        LinRGBColor::new(decode(r), decode(g), decode(b))
+        LinRGBColor::new(gamma_decode(r), gamma_decode(g), gamma_decode(b))
     }
 
     fn hsv(&self) -> HSVColor {
@@ -270,7 +285,7 @@ impl Color for SRGBColor {
 
 impl fmt::Display for SRGBColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>5.1}%, {:>5.1}%, {:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
+        write!(f, "{:>5.1}%,{:>5.1}%,{:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
     }
 }
 
@@ -338,17 +353,8 @@ impl LinRGBColor {
 
 impl Color for LinRGBColor {
     fn srgb(&self) -> SRGBColor {
-        const SRGB_CUTOFF: f32 = 0.0031308;
-
-        let encode = |linear|
-            if linear <= SRGB_CUTOFF {
-                linear * 12.92
-            } else {
-                gamma_encode(linear) * 1.055 - 0.055
-            };
-
         let (r, g, b) = self.to_tuple();
-        SRGBColor::new(encode(r), encode(g), encode(b))
+        SRGBColor::new(gamma_encode(r), gamma_encode(g), gamma_encode(b))
     }
 
     fn lin_rgb(&self) -> LinRGBColor { *self }
@@ -361,7 +367,7 @@ impl Color for LinRGBColor {
 
 impl fmt::Display for LinRGBColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>5.1}%, {:>5.1}%, {:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
+        write!(f, "{:>5.1}%,{:>5.1}%,{:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
     }
 }
 
@@ -463,6 +469,6 @@ impl Color for HSVColor {
 
 impl fmt::Display for HSVColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>5.1}°, {:>5.1}%, {:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)
+        write!(f, "{:>5.1}°,{:>5.1}%,{:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)
     }
 }
