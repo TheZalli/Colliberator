@@ -11,6 +11,48 @@ pub use self::hsv::*;
 
 pub const GAMMA: f32 = 2.4;
 
+macro_rules! impl_triple_froms {
+    ($name:ident, $cha_ty:ty, $x:ident, $y:ident, $z:ident) => {
+        impl From<($cha_ty, $cha_ty, $cha_ty)> for $name {
+            fn from(arg: ($cha_ty, $cha_ty, $cha_ty)) -> Self {
+                $name::new(arg.0, arg.1, arg.2)
+            }
+        }
+
+        impl From<[$cha_ty; 3]> for $name {
+            fn from(arg: [$cha_ty; 3]) -> Self {
+                $name::new(arg[0], arg[1], arg[2])
+            }
+        }
+
+        impl From<$name> for ($cha_ty, $cha_ty, $cha_ty) {
+            fn from(color: $name) -> Self {
+                (color.$x, color.$y, color.$z)
+            }
+        }
+
+        impl From<$name> for [$cha_ty; 3] {
+            fn from(color: $name) -> Self {
+                [color.$x, color.$y, color.$z]
+            }
+        }
+
+        impl<'a> From<&'a $name> for ($cha_ty, $cha_ty, $cha_ty) {
+            fn from(color: & $name) -> Self { (*color).into() }
+        }
+
+        impl<'a> From<&'a $name> for [$cha_ty; 3] {
+            fn from(color: & $name) -> Self { (*color).into() }
+        }
+    };
+}
+
+impl_triple_froms!(SRGBColor, f32, r, g, b);
+impl_triple_froms!(SRGB24Color, u8, r, g, b);
+impl_triple_froms!(LinRGBColor, f32, r, g, b);
+impl_triple_froms!(LinRGB48Color, u16, r, g, b);
+impl_triple_froms!(HSVColor, f32, h, s, v);
+
 /// Clamps the given value into the inclusive range between the given minimum and maximum.
 ///
 /// If no comparison can be made and the function `PartialOrd::partial_cmp` returns `None`, then
@@ -117,7 +159,7 @@ pub trait Color {
     /// Tells the whiteness of the color as perceived by humans.
     /// Values nearer 0 are darker, and values nearer 1 are lighter.
     fn relative_luminance(&self) -> f32 {
-        let (r, g, b) = self.lin_rgb().to_tuple();
+        let (r, g, b) = self.lin_rgb().into();
         0.2126*r + 0.7152*g + 0.0722*b
     }
 
@@ -220,7 +262,7 @@ pub trait Color {
     /// Returns the `text` with this color as it's background color using ANSI escapes.
     fn ansi_bgcolor(&self, text: &str) -> String {
         const CSI: &str = "\u{1B}[";
-        let (r, g, b) = self.srgb24().to_tuple();
+        let (r, g, b) = self.srgb24().into();
 
         // color the text as black or white depending on the bg:s lightness
         let fg =

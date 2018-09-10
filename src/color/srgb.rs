@@ -19,25 +19,23 @@ impl SRGBColor {
         let f = |x| clamp(x, 0.0, 1.0);
         SRGBColor { r: f(r), g: f(g), b: f(b), _priv: () }
     }
-
-    pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }
 }
 
 impl Color for SRGBColor {
     fn srgb(&self) -> SRGBColor { *self }
 
     fn srgb24(&self) -> SRGB24Color {
-        let (r, g, b) = self.to_tuple();
+        let (r, g, b) = self.into();
         SRGB24Color::new((255.0 * r) as u8, (255.0 * g) as u8, (255.0 * b) as u8)
     }
 
     fn lin_rgb(&self) -> LinRGBColor {
-        let (r, g, b) = self.to_tuple();
+        let (r, g, b) = self.into();
         LinRGBColor::new(gamma_decode(r), gamma_decode(g), gamma_decode(b))
     }
 
     fn hsv(&self) -> HSVColor {
-        let (r, g, b) = self.to_tuple();
+        let (r, g, b) = self.into();
 
         let max = r.max(g).max(b);
         let min = r.min(g).min(b);
@@ -60,19 +58,6 @@ impl Color for SRGBColor {
     }
 }
 
-impl From<(f32, f32, f32)> for SRGBColor {
-    fn from(arg: (f32, f32, f32)) -> Self {
-        let (r, g, b) = arg;
-        SRGBColor::new(r, g, b)
-    }
-}
-
-impl From<[f32; 3]> for SRGBColor {
-    fn from(arg: [f32; 3]) -> Self {
-        (arg[0], arg[1], arg[2]).into()
-    }
-}
-
 impl fmt::Display for SRGBColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>5.1}%,{:>5.1}%,{:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
@@ -90,9 +75,6 @@ impl SRGB24Color {
     /// Create a new RGB color.
     pub fn new(r: u8, g: u8, b: u8) -> Self { SRGB24Color { r, g, b } }
 
-    /// Destructure self into a tuple
-    pub fn to_tuple(&self) -> (u8, u8, u8) { (self.r, self.g, self.b) }
-
     /// Create `SRGB24Color` from a hexcode.
     ///
     /// # Safety
@@ -109,30 +91,17 @@ impl SRGB24Color {
         let h = hex_str.as_bytes_mut();
         h.make_ascii_lowercase();
 
-        SRGB24Color::new(f(h[0], h[1]), f(h[2], h[3]), f(h[4], h[5]))
+        (f(h[0], h[1]), f(h[2], h[3]), f(h[4], h[5])).into()
     }
 }
 
 impl Color for SRGB24Color {
     fn srgb(&self) -> SRGBColor {
-        let (r, g, b) = self.to_tuple();
-        SRGBColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+        let (r, g, b) = self.into();
+       (r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0).into()
     }
 
     fn srgb24(&self) -> SRGB24Color { *self }
-}
-
-impl From<(u8, u8, u8)> for SRGB24Color {
-    fn from(arg: (u8, u8, u8)) -> Self {
-        let (r, g, b) = arg;
-        SRGB24Color::new(r, g, b)
-    }
-}
-
-impl From<[u8; 3]> for SRGB24Color {
-    fn from(arg: [u8; 3]) -> Self {
-        (arg[0], arg[1], arg[2]).into()
-    }
 }
 
 impl fmt::Display for SRGB24Color {

@@ -65,19 +65,6 @@ impl Color for HSVColor {
     fn hsv(&self) -> HSVColor { *self }
 }
 
-impl From<(f32, f32, f32)> for HSVColor {
-    fn from(arg: (f32, f32, f32)) -> Self {
-        let (r, g, b) = arg;
-        HSVColor::new(r, g, b)
-    }
-}
-
-impl From<[f32; 3]> for HSVColor {
-    fn from(arg: [f32; 3]) -> Self {
-        (arg[0], arg[1], arg[2]).into()
-    }
-}
-
 impl fmt::Display for HSVColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>5.1}°,{:>5.1}%,{:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)

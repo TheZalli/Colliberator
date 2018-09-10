@@ -29,8 +29,7 @@ fn main() {
     let mut l = [LinRGB48Color::default(); LEN];
 
     for (i, (s, l)) in s.iter_mut().zip(l.iter_mut()).enumerate() {
-        let val = i * 256/LEN;
-        let (val8, val16) = (val as u8, val as u16);
+        let (val8, val16) = ((i * 256/LEN) as u8, (i * 65535/LEN) as u16);
 
         *s = SRGB24Color::new(val8, val8, val8);
         *l = LinRGB48Color::new(val16, val16, val16);
