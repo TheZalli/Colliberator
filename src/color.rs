@@ -1,5 +1,6 @@
 use std::str;
 use std::fmt;
+use std::ops::{Add, Sub, Mul, Div, Neg};
 
 const GAMMA: f32 = 2.4;
 
@@ -67,11 +68,22 @@ pub trait Color {
     /// Return the normalised RGB representation in the linear color space
     fn lin_rgb(&self) -> LinRGBColor { self.srgb().lin_rgb() }
 
-    /// Return the 24-bit RGB representation in the linear color space
-    fn lin_rgb24(&self) -> LinRGB24Color { self.lin_rgb().lin_rgb24() }
+    /// Return the 48-bit RGB representation in the linear color space
+    fn lin_rgb48(&self) -> LinRGB48Color { self.lin_rgb().lin_rgb48() }
 
     /// Return the HSV representation
     fn hsv(&self) -> HSVColor { self.srgb().hsv() }
+
+    /// Blends this color with another using the given ratio.
+    ///
+    /// Blends in the linear RGB space.
+    ///
+    /// Ratio of 0.5 means both colors are used equally.
+    /// Ratio of 1.0 means only `self` is used, while ratio of 0.0 means only `other` is used.
+    /// If ratio is outside 0.0 - 1.0, this function is undefined behaviour.
+    fn blend<T: Color>(&self, other: &T, ratio: f32) -> LinRGBColor {
+        self.lin_rgb() * ratio + other.lin_rgb() * (1.0 - ratio)
+    }
 
     /// Returns the relative luminance of this color between 0 and 1.
     ///
@@ -359,9 +371,72 @@ impl Color for LinRGBColor {
 
     fn lin_rgb(&self) -> LinRGBColor { *self }
 
-    fn lin_rgb24(&self) -> LinRGB24Color {
+    fn lin_rgb48(&self) -> LinRGB48Color {
         let (r, g, b) = self.to_tuple();
-        LinRGB24Color::new((r * 255.0) as u8, (g * 255.0) as u8, (b * 255.0) as u8)
+        LinRGB48Color::new((r * 255.0) as u16, (g * 255.0) as u16, (b * 255.0) as u16)
+    }
+}
+
+impl Add for LinRGBColor {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let (r1, g1, b1) = self.to_tuple();
+        let (r2, g2, b2) = rhs.to_tuple();
+        LinRGBColor::new(r1 + r2, g1 + g2, b1 + b2)
+    }
+}
+
+impl Sub for LinRGBColor {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self + rhs * -1.0
+    }
+}
+
+impl Mul<f32> for LinRGBColor {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        let (r, g, b) = self.to_tuple();
+        LinRGBColor::new(r * rhs, g * rhs, b * rhs)
+    }
+}
+
+impl Mul<LinRGBColor> for f32 {
+    type Output = LinRGBColor;
+
+    fn mul(self, rhs: LinRGBColor) -> Self::Output {
+        let (r, g, b) = rhs.to_tuple();
+        LinRGBColor::new(self * r, self * g, self * b)
+    }
+}
+
+impl Div<f32> for LinRGBColor {
+    type Output = Self;
+
+    fn div(self, rhs: f32) -> Self::Output {
+        let (r, g, b) = self.to_tuple();
+        LinRGBColor::new(r / rhs, g / rhs, b / rhs)
+    }
+}
+
+impl Div<LinRGBColor> for f32 {
+    type Output = LinRGBColor;
+
+    fn div(self, rhs: LinRGBColor) -> Self::Output {
+        let (r, g, b) = rhs.to_tuple();
+        LinRGBColor::new(self / r, self / g, self / b)
+    }
+}
+
+impl Neg for LinRGBColor {
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        let (r, g, b) = self.to_tuple();
+        LinRGBColor::new(-r, -g, -b)
     }
 }
 
@@ -372,22 +447,22 @@ impl fmt::Display for LinRGBColor {
 }
 
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-/// A 24-bit color with red, green and blue channels in the linear color space.
-pub struct LinRGB24Color {
-    pub r: u8,
-    pub g: u8,
-    pub b: u8
+/// A 48-bit color with red, green and blue channels in the linear color space.
+pub struct LinRGB48Color {
+    pub r: u16,
+    pub g: u16,
+    pub b: u16
 }
 
-impl LinRGB24Color {
+impl LinRGB48Color {
     /// Create a new sRGB color.
-    pub fn new(r: u8, g: u8, b: u8) -> Self { LinRGB24Color { r, g, b } }
+    pub fn new(r: u16, g: u16, b: u16) -> Self { LinRGB48Color { r, g, b } }
 
     /// Destructure self into a tuple
-    pub fn to_tuple(&self) -> (u8, u8, u8) { (self.r, self.g, self.b) }
+    pub fn to_tuple(&self) -> (u16, u16, u16) { (self.r, self.g, self.b) }
 }
 
-impl Color for LinRGB24Color {
+impl Color for LinRGB48Color {
     fn srgb(&self) -> SRGBColor { self.lin_rgb().srgb() }
 
     fn lin_rgb(&self) -> LinRGBColor {
@@ -395,10 +470,10 @@ impl Color for LinRGB24Color {
         LinRGBColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
     }
 
-    fn lin_rgb24(&self) -> LinRGB24Color { *self }
+    fn lin_rgb48(&self) -> LinRGB48Color { *self }
 }
 
-impl fmt::Display for LinRGB24Color {
+impl fmt::Display for LinRGB48Color {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>3}, {:>3}, {:>3}", self.r, self.g, self.b)
     }

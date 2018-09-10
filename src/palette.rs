@@ -106,7 +106,7 @@ impl<'a> Iterator for ColorSetsIter<'a> {
 #[derive(Debug)]
 pub struct ColorInfo {
     srgb: SRGB24Color,
-    lin_rgb: LinRGB24Color,
+    lin_rgb: LinRGB48Color,
     hsv: HSVColor,
     shades_of: Vec<(BaseColor, f32)>,
 }
@@ -115,7 +115,7 @@ impl ColorInfo {
     pub fn new<T: Color>(color: T) -> Self {
         ColorInfo {
             srgb: color.srgb24(),
-            lin_rgb: color.lin_rgb24(),
+            lin_rgb: color.lin_rgb48(),
             hsv: color.hsv(),
             shades_of: color.shades(),
         }
