@@ -6,9 +6,10 @@ use color::*;
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 /// An RGB color with channels normalized between 0 and 1 in the linear space.
 pub struct LinRGBColor {
-    r: f32,
-    g: f32,
-    b: f32
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+    _priv: ()
 }
 
 impl LinRGBColor {
@@ -17,7 +18,7 @@ impl LinRGBColor {
     /// The values are clamped into 0.0 - 1.0 range.
     pub fn new(r: f32, g: f32, b: f32) -> Self {
         let f = |x| clamp(x, 0.0, 1.0);
-        LinRGBColor { r: f(r), g: f(g), b: f(b) }
+        LinRGBColor { r: f(r), g: f(g), b: f(b), _priv: () }
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }

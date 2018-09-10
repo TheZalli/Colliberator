@@ -13,8 +13,8 @@ pub struct HSVColor {
 impl HSVColor {
     /// Create a new HSV value.
     ///
-    /// Hue is given in degrees and it is wrapped between [0, 360).
-    /// Saturation and value are given as a percentage between \[0, 1\].
+    /// Hue is given in degrees and it is wrapped between [0, 360) using modulo.
+    /// Saturation and value are given as a value between \[0, 1\].
     ///
     /// # Panic
     /// If saturation and value are not between 0.0 and 1.0, this function will panic.

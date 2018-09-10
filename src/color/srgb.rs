@@ -7,7 +7,8 @@ use color::*;
 pub struct SRGBColor {
     pub r: f32,
     pub g: f32,
-    pub b: f32
+    pub b: f32,
+    _priv: ()
 }
 
 impl SRGBColor {
@@ -16,7 +17,7 @@ impl SRGBColor {
     /// The values are clamped into 0.0 - 1.0 range.
     pub fn new(r: f32, g: f32, b: f32) -> Self {
         let f = |x| clamp(x, 0.0, 1.0);
-        SRGBColor { r: f(r), g: f(g), b: f(b) }
+        SRGBColor { r: f(r), g: f(g), b: f(b), _priv: () }
     }
 
     pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }
