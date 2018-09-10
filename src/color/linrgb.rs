@@ -27,7 +27,7 @@ impl LinRGBColor {
 impl Color for LinRGBColor {
     fn srgb(&self) -> SRGBColor {
         let (r, g, b) = self.to_tuple();
-        SRGBColor::new(gamma_encode(r), gamma_encode(g), gamma_encode(b))
+        (gamma_encode(r), gamma_encode(g), gamma_encode(b)).into()
     }
 
     fn lin_rgb(&self) -> LinRGBColor { *self }
@@ -35,7 +35,7 @@ impl Color for LinRGBColor {
     fn lin_rgb48(&self) -> LinRGB48Color {
         const MAX: f32 = u16::max_value() as f32;
         let (r, g, b) = self.to_tuple();
-        LinRGB48Color::new((r * MAX) as u16, (g * MAX) as u16, (b * MAX) as u16)
+        ((r * MAX) as u16, (g * MAX) as u16, (b * MAX) as u16).into()
     }
 }
 
@@ -64,7 +64,7 @@ impl Mul<f32> for LinRGBColor {
 
     fn mul(self, rhs: f32) -> Self::Output {
         let (r, g, b) = self.to_tuple();
-        LinRGBColor::new(r * rhs, g * rhs, b * rhs)
+        (r * rhs, g * rhs, b * rhs).into()
     }
 }
 
@@ -73,7 +73,7 @@ impl Mul<LinRGBColor> for f32 {
 
     fn mul(self, rhs: LinRGBColor) -> Self::Output {
         let (r, g, b) = rhs.to_tuple();
-        LinRGBColor::new(self * r, self * g, self * b)
+        (self * r, self * g, self * b).into()
     }
 }
 
@@ -82,7 +82,7 @@ impl Div<f32> for LinRGBColor {
 
     fn div(self, rhs: f32) -> Self::Output {
         let (r, g, b) = self.to_tuple();
-        LinRGBColor::new(r / rhs, g / rhs, b / rhs)
+        (r / rhs, g / rhs, b / rhs).into()
     }
 }
 
@@ -91,7 +91,7 @@ impl Div<LinRGBColor> for f32 {
 
     fn div(self, rhs: LinRGBColor) -> Self::Output {
         let (r, g, b) = rhs.to_tuple();
-        LinRGBColor::new(self / r, self / g, self / b)
+        (self / r, self / g, self / b).into()
     }
 }
 
@@ -140,6 +140,75 @@ impl Color for LinRGB48Color {
     }
 
     fn lin_rgb48(&self) -> LinRGB48Color { *self }
+}
+
+impl Add for LinRGB48Color {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        let (r1, g1, b1) = self.to_tuple();
+        let (r2, g2, b2) = rhs.to_tuple();
+        (r1 + r2, g1 + g2, b1 + b2).into()
+    }
+}
+
+impl Sub for LinRGB48Color {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        let (r1, g1, b1) = self.to_tuple();
+        let (r2, g2, b2) = rhs.to_tuple();
+        (r1 - r2, g1 - g2, b1 - b2).into()
+    }
+}
+
+impl Mul<u16> for LinRGB48Color {
+    type Output = Self;
+
+    fn mul(self, rhs: u16) -> Self::Output {
+        let (r, g, b) = self.to_tuple();
+        (r * rhs, g * rhs, b * rhs).into()
+    }
+}
+
+impl Mul<LinRGB48Color> for u16 {
+    type Output = LinRGB48Color;
+
+    fn mul(self, rhs: LinRGB48Color) -> Self::Output {
+        let (r, g, b) = rhs.to_tuple();
+        (self * r, self * g, self * b).into()
+    }
+}
+
+impl Div<u16> for LinRGB48Color {
+    type Output = Self;
+
+    fn div(self, rhs: u16) -> Self::Output {
+        let (r, g, b) = self.to_tuple();
+        (r / rhs, g / rhs, b / rhs).into()
+    }
+}
+
+impl Div<LinRGB48Color> for u16 {
+    type Output = LinRGB48Color;
+
+    fn div(self, rhs: LinRGB48Color) -> Self::Output {
+        let (r, g, b) = rhs.to_tuple();
+        (self / r, self / g, self / b).into()
+    }
+}
+
+impl From<(u16, u16, u16)> for LinRGB48Color {
+    fn from(arg: (u16, u16, u16)) -> Self {
+        let (r, g, b) = arg;
+        LinRGB48Color::new(r, g, b)
+    }
+}
+
+impl From<[u16; 3]> for LinRGB48Color {
+    fn from(arg: [u16; 3]) -> Self {
+        (arg[0], arg[1], arg[2]).into()
+    }
 }
 
 impl fmt::Display for LinRGB48Color {

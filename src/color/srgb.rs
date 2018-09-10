@@ -60,6 +60,19 @@ impl Color for SRGBColor {
     }
 }
 
+impl From<(f32, f32, f32)> for SRGBColor {
+    fn from(arg: (f32, f32, f32)) -> Self {
+        let (r, g, b) = arg;
+        SRGBColor::new(r, g, b)
+    }
+}
+
+impl From<[f32; 3]> for SRGBColor {
+    fn from(arg: [f32; 3]) -> Self {
+        (arg[0], arg[1], arg[2]).into()
+    }
+}
+
 impl fmt::Display for SRGBColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>5.1}%,{:>5.1}%,{:>5.1}%", self.r * 100.0, self.g * 100.0, self.b * 100.0)
@@ -107,6 +120,19 @@ impl Color for SRGB24Color {
     }
 
     fn srgb24(&self) -> SRGB24Color { *self }
+}
+
+impl From<(u8, u8, u8)> for SRGB24Color {
+    fn from(arg: (u8, u8, u8)) -> Self {
+        let (r, g, b) = arg;
+        SRGB24Color::new(r, g, b)
+    }
+}
+
+impl From<[u8; 3]> for SRGB24Color {
+    fn from(arg: [u8; 3]) -> Self {
+        (arg[0], arg[1], arg[2]).into()
+    }
 }
 
 impl fmt::Display for SRGB24Color {
