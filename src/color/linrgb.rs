@@ -33,8 +33,9 @@ impl Color for LinRGBColor {
     fn lin_rgb(&self) -> LinRGBColor { *self }
 
     fn lin_rgb48(&self) -> LinRGB48Color {
+        const MAX: f32 = u16::max_value() as f32;
         let (r, g, b) = self.to_tuple();
-        LinRGB48Color::new((r * 255.0) as u16, (g * 255.0) as u16, (b * 255.0) as u16)
+        LinRGB48Color::new((r * MAX) as u16, (g * MAX) as u16, (b * MAX) as u16)
     }
 }
 
@@ -133,8 +134,9 @@ impl Color for LinRGB48Color {
     fn srgb(&self) -> SRGBColor { self.lin_rgb().srgb() }
 
     fn lin_rgb(&self) -> LinRGBColor {
+        const MAX: f32 = u16::max_value() as f32;
         let (r, g, b) = self.to_tuple();
-        LinRGBColor::new(r as f32 / 255.0, g as f32 / 255.0, b as f32 / 255.0)
+        LinRGBColor::new(r as f32 / MAX, g as f32 / MAX, b as f32 / MAX)
     }
 
     fn lin_rgb48(&self) -> LinRGB48Color { *self }
