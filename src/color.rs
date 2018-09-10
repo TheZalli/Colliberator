@@ -1,8 +1,28 @@
 use std::str;
 use std::fmt;
-use std::ops::{Add, Sub, Mul, Div, Neg};
+use std::ops::{Add, Sub, Mul, Div};
 
-const GAMMA: f32 = 2.4;
+pub const GAMMA: f32 = 2.4;
+
+/// Clamps the given value into the inclusive range between the given minimum and maximum.
+///
+/// If no comparison can be made and the function `PartialOrd::partial_cmp` returns `None`, then
+/// this function returns the minimum value.
+///
+/// If the original value is equal to minimum or maximum, the minimum or maximum value is returned
+/// respectively.
+#[inline]
+pub fn clamp<T: PartialOrd>(value: T, min: T, max: T) -> T {
+    use std::cmp::Ordering::*;
+    match value.partial_cmp(max) {
+        Some(Less) =>
+            match value.partial_cmp(min) {
+                Some(Greater) => value,
+                _ => min,
+            },
+        _ => max
+    }
+}
 
 /// Gamma encodes a linear value into the sRGB space
 pub fn gamma_encode(linear: f32) -> f32 {
@@ -254,7 +274,14 @@ pub struct SRGBColor {
 }
 
 impl SRGBColor {
-    pub fn new(r: f32, g: f32, b: f32) -> Self { SRGBColor { r, g, b } }
+    /// Creates a new `LinRGBColor` using the given rgb-values.
+    ///
+    /// The values are clamped into 0.0 - 1.0 range.
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        let f = |x| clamp(x, 0.0, 1.0);
+        SRGBColor { r: f(r), g: f(g), b: f(b) }
+    }
+
     pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }
 }
 
@@ -359,7 +386,14 @@ pub struct LinRGBColor {
 }
 
 impl LinRGBColor {
-    pub fn new(r: f32, g: f32, b: f32) -> Self { LinRGBColor { r, g, b } }
+    /// Creates a new `LinRGBColor` using the given rgb-values.
+    ///
+    /// The values are clamped into 0.0 - 1.0 range.
+    pub fn new(r: f32, g: f32, b: f32) -> Self {
+        let f = |x| clamp(x, 0.0, 1.0);
+        LinRGBColor { r: f(r), g: f(g), b: f(b) }
+    }
+
     pub fn to_tuple(&self) -> (f32, f32, f32) { (self.r, self.g, self.b) }
 }
 
@@ -383,7 +417,7 @@ impl Add for LinRGBColor {
     fn add(self, rhs: Self) -> Self::Output {
         let (r1, g1, b1) = self.to_tuple();
         let (r2, g2, b2) = rhs.to_tuple();
-        LinRGBColor::new(r1 + r2, g1 + g2, b1 + b2)
+        (r1 + r2, g1 + g2, b1 + b2).into()
     }
 }
 
@@ -391,7 +425,9 @@ impl Sub for LinRGBColor {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
-        self + rhs * -1.0
+        let (r1, g1, b1) = self.to_tuple();
+        let (r2, g2, b2) = rhs.to_tuple();
+        (r1 - r2, g1 - g2, b1 - b2).into()
     }
 }
 
@@ -431,12 +467,16 @@ impl Div<LinRGBColor> for f32 {
     }
 }
 
-impl Neg for LinRGBColor {
-    type Output = Self;
+impl From<(f32, f32, f32)> for LinRGBColor {
+    fn from(arg: (f32, f32, f32)) -> Self {
+        let (r, g, b) = arg;
+        LinRGBColor::new(r, g, b)
+    }
+}
 
-    fn neg(self) -> Self::Output {
-        let (r, g, b) = self.to_tuple();
-        LinRGBColor::new(-r, -g, -b)
+impl From<[f32; 3]> for LinRGBColor {
+    fn from(arg: [f32; 3]) -> Self {
+        (arg[0], arg[1], arg[2]).into()
     }
 }
 
