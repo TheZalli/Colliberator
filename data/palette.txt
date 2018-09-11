@@ -28,15 +28,15 @@ Greyscale:
 Warm greyscale:
 * wg0
 * Sun               #fff9e0
-* wg1
-* wg2
-* Sandstone         #b5a896
-* wg3               #9a8f80
-* wg4               #81786b
-* wg5               #676056
-* Taupe             #4d4841
+* Beige             #dbd2c3
+* Timber            #c9bf9d
+* Sandstone         #b3a28f
+* Cinereous         #9a8780
+* Sepia             #857361
+* Rose quartz       #78686e
+* Taupe             #52473c
+* Puce              #453129
 * Shadow            #29271b
-* wg6               #1e1c0f
 * Licorice          #141002
 
 Cool greyscale:
@@ -68,7 +68,7 @@ Pastel colors:
 * Cream             #fffba6
 * Mint              #a9eda6
 * Aquamarine        #90ffda
-* Sky blue          #91c4f0
+* Baby blue         #91c4f0
 * Mauve             #ceafe2
 * Flamingo          #f979da
 
