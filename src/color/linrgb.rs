@@ -1,6 +1,7 @@
 use std::fmt;
 use std::ops::{Add, Sub, Mul, Div};
 
+use util::*;
 use color::*;
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]

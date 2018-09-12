@@ -1,5 +1,6 @@
 use std::fmt;
 
+//use util::*;
 use color::*;
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]

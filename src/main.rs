@@ -2,6 +2,7 @@ extern crate regex;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate failure;
 
+mod util;
 mod error;
 mod color;
 mod palette;

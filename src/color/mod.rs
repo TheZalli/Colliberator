@@ -2,14 +2,15 @@ mod srgb;
 mod linrgb;
 mod hsv;
 
-use std::str;
-use std::fmt;
-
 pub use self::srgb::*;
 pub use self::linrgb::*;
 pub use self::hsv::*;
 
-pub const GAMMA: f32 = 2.4;
+use std::str;
+use std::fmt;
+use std::marker::PhantomData;
+
+use util::*;
 
 macro_rules! impl_triple_froms {
     ($name:ident, $cha_ty:ty, $x:ident, $y:ident, $z:ident) => {
@@ -52,46 +53,6 @@ impl_triple_froms!(SRGB24Color, u8, r, g, b);
 impl_triple_froms!(LinRGBColor, f32, r, g, b);
 impl_triple_froms!(LinRGB48Color, u16, r, g, b);
 impl_triple_froms!(HSVColor, f32, h, s, v);
-
-/// Clamps the given value into the inclusive range between the given minimum and maximum.
-///
-/// If no comparison can be made and the function `PartialOrd::partial_cmp` returns `None`, then
-/// this function returns the minimum value.
-///
-/// If the original value is equal to minimum or maximum, the minimum or maximum value is returned
-/// respectively.
-#[inline]
-pub fn clamp<T: PartialOrd>(value: T, min: T, max: T) -> T {
-    use std::cmp::Ordering::*;
-    match value.partial_cmp(&max) {
-        Some(Less) =>
-            match value.partial_cmp(&min) {
-                Some(Greater) => value,
-                _ => min,
-            },
-        _ => max
-    }
-}
-
-/// Gamma encodes a linear value into the sRGB space
-pub fn gamma_encode(linear: f32) -> f32 {
-    const SRGB_CUTOFF: f32 = 0.0031308;
-    if linear <= SRGB_CUTOFF {
-        linear * 12.92
-    } else {
-        linear.powf(1.0/GAMMA) * 1.055 - 0.055
-    }
-}
-
-/// Gamma decodes an sRGB value into the linear space
-pub fn gamma_decode(encoded: f32) -> f32 {
-    const SRGB_INV_CUTOFF: f32 = 0.04045;
-    if encoded <= SRGB_INV_CUTOFF {
-        encoded / 12.92
-    } else {
-        ((encoded + 0.055)/1.055).powf(GAMMA)
-    }
-}
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 /// The basic colors of the rainbow
@@ -313,3 +274,83 @@ impl Color for BaseColor {
         }
     }
 }
+
+/// Marker struct for the sRGB color space
+pub struct SRGBSpace;
+
+/// Marker struct for the linear color space
+pub struct LinearSpace;
+
+/// A color channel in the `S` color space.
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub struct ColorChannel<T, S>(T, PhantomData<S>);
+
+impl<S> ColorChannel<u8, S> {
+    /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
+    pub fn portion(self) -> ColorChannel<Portion, S> {
+        ColorChannel((self.0 as f32 / 255.0).into(), PhantomData)
+    }
+}
+
+impl<S> ColorChannel<u16, S> {
+    /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
+    pub fn portion(self) -> ColorChannel<Portion, S> {
+        ColorChannel((self.0 as f32 / u16::max_value() as f32).into(), PhantomData)
+    }
+}
+
+impl<S> ColorChannel<Portion, S> {
+    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
+    pub fn quantizate_u8(self) -> ColorChannel<u8, S> {
+        ColorChannel(self.0.quantizate_u8(), PhantomData)
+    }
+
+    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
+    pub fn quantizate_u16(self) -> ColorChannel<u16, S> {
+        ColorChannel(self.0.quantizate_u16(), PhantomData)
+    }
+}
+
+impl ColorChannel<Portion, SRGBSpace> {
+    /// Gamma decodes this color channel value into the linear color space
+    pub fn decode(self) -> ColorChannel<Portion, LinearSpace> {
+        ColorChannel(gamma_decode(self.0.into()).into(), PhantomData)
+    }
+}
+
+impl ColorChannel<Portion, LinearSpace> {
+    /// Gamma encodes this color channel value into the sRGB color space
+    pub fn encode(self) -> ColorChannel<Portion, SRGBSpace> {
+        ColorChannel(gamma_encode(self.0.into()).into(), PhantomData)
+    }
+}
+
+macro_rules! impl_channel_convs_for_types {
+    ( $( $wrapped:ty ),* ) => { $(
+        impl<S> From<$wrapped> for ColorChannel<$wrapped, S> {
+            fn from(arg: $wrapped) -> Self {
+                ColorChannel(arg, PhantomData)
+            }
+        }
+
+        impl<S> From<ColorChannel<$wrapped, S>> for $wrapped {
+            fn from(arg: ColorChannel<$wrapped, S>) -> Self {
+                arg.0
+            }
+        }
+
+        impl<S> AsRef<$wrapped> for ColorChannel<$wrapped, S> {
+            fn as_ref(&self) -> & $wrapped {
+                &self.0
+            }
+        }
+
+        impl<S> AsMut<$wrapped> for ColorChannel<$wrapped, S> {
+            fn as_mut(&mut self) -> &mut $wrapped {
+                &mut self.0
+            }
+        }
+    )* };
+}
+
+impl_channel_convs_for_types!(u8, u16, Portion, Deg);
