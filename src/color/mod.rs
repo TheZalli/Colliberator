@@ -281,76 +281,84 @@ pub struct SRGBSpace;
 /// Marker struct for the linear color space
 pub struct LinearSpace;
 
-/// A color channel in the `S` color space.
+/// An RGB color in the `S` color space.
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct ColorChannel<T, S>(T, PhantomData<S>);
+pub struct RGBColor<T, S> {
+    pub r: T,
+    pub g: T,
+    pub b: T,
+    _space: PhantomData<S>
+}
 
-impl<S> ColorChannel<u8, S> {
-    /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
-    pub fn portion(self) -> ColorChannel<Portion, S> {
-        ColorChannel((self.0 as f32 / 255.0).into(), PhantomData)
+impl<T, S> RGBColor<T, S> {
+    pub fn new(r: T, g: T, b: T) -> Self {
+        RGBColor { r, g, b, _space: PhantomData }
+    }
+
+    /// Applies the given function to all color channels.
+    pub fn map<U: Clone, F: Fn(T) -> U>(self, fun: F) -> RGBColor<U, S> {
+        let (r, g, b) = self.to_tuple();
+        (fun(r), fun(g), fun(b)).into()
+    }
+
+    pub fn to_tuple(self) -> (T, T, T) {
+        (self.r, self.g, self.b)
+    }
+
+    pub fn to_array(self) -> [T; 3] {
+        [self.r, self.g, self.b]
     }
 }
 
-impl<S> ColorChannel<u16, S> {
+impl<S> RGBColor<u8, S> {
     /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
-    pub fn portion(self) -> ColorChannel<Portion, S> {
-        ColorChannel((self.0 as f32 / u16::max_value() as f32).into(), PhantomData)
+    pub fn portions(self) -> RGBColor<Portion, S> {
+        self.map(|x| (x as f32 / 255.0).into())
     }
 }
 
-impl<S> ColorChannel<Portion, S> {
+impl<S> RGBColor<u16, S> {
+    /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
+    pub fn portions(self) -> RGBColor<Portion, S> {
+        self.map(|x| (x as f32 / u16::max_value() as f32).into())
+    }
+}
+
+impl<S> RGBColor<Portion, S> {
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
-    pub fn quantizate_u8(self) -> ColorChannel<u8, S> {
-        ColorChannel(self.0.quantizate_u8(), PhantomData)
+    pub fn quantizate_u8(self) -> RGBColor<u8, S> {
+        self.map(&Portion::quantizate_u8)
     }
 
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
-    pub fn quantizate_u16(self) -> ColorChannel<u16, S> {
-        ColorChannel(self.0.quantizate_u16(), PhantomData)
+    pub fn quantizate_u16(self) -> RGBColor<u16, S> {
+        self.map(&Portion::quantizate_u16)
     }
 }
 
-impl ColorChannel<Portion, SRGBSpace> {
+impl RGBColor<Portion, SRGBSpace> {
     /// Gamma decodes this color channel value into the linear color space
-    pub fn decode(self) -> ColorChannel<Portion, LinearSpace> {
-        ColorChannel(gamma_decode(self.0.into()).into(), PhantomData)
+    pub fn decode(self) -> RGBColor<Portion, LinearSpace> {
+        self.map(|x| gamma_decode(x.into()).into()).to_tuple().into()
     }
 }
 
-impl ColorChannel<Portion, LinearSpace> {
+impl RGBColor<Portion, LinearSpace> {
     /// Gamma encodes this color channel value into the sRGB color space
-    pub fn encode(self) -> ColorChannel<Portion, SRGBSpace> {
-        ColorChannel(gamma_encode(self.0.into()).into(), PhantomData)
+    pub fn encode(self) -> RGBColor<Portion, SRGBSpace> {
+        self.map(|x| gamma_encode(x.into()).into()).to_tuple().into()
     }
 }
 
-macro_rules! impl_channel_convs_for_types {
-    ( $( $wrapped:ty ),* ) => { $(
-        impl<S> From<$wrapped> for ColorChannel<$wrapped, S> {
-            fn from(arg: $wrapped) -> Self {
-                ColorChannel(arg, PhantomData)
-            }
-        }
-
-        impl<S> From<ColorChannel<$wrapped, S>> for $wrapped {
-            fn from(arg: ColorChannel<$wrapped, S>) -> Self {
-                arg.0
-            }
-        }
-
-        impl<S> AsRef<$wrapped> for ColorChannel<$wrapped, S> {
-            fn as_ref(&self) -> & $wrapped {
-                &self.0
-            }
-        }
-
-        impl<S> AsMut<$wrapped> for ColorChannel<$wrapped, S> {
-            fn as_mut(&mut self) -> &mut $wrapped {
-                &mut self.0
-            }
-        }
-    )* };
+impl<T: Clone, S> From<(T, T, T)> for RGBColor<T, S> {
+    fn from(tuple: (T, T, T)) -> Self {
+        let tuple = tuple.clone();
+        RGBColor::new(tuple.0, tuple.1, tuple.2)
+    }
 }
 
-impl_channel_convs_for_types!(u8, u16, Portion, Deg);
+impl<T: Clone, S> From<[T; 3]> for RGBColor<T, S> {
+    fn from(array: [T; 3]) -> Self {
+        RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())
+    }
+}

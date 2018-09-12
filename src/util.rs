@@ -4,7 +4,13 @@ use std::ops::{Add, Sub, Mul, Div, Rem};
 pub const GAMMA: f32 = 2.4;
 
 macro_rules! wrapper_struct_conv_impls {
-    ($outer:ty, $inner:ty) => {
+    ($outer:ident, $inner:ty) => {
+        impl From<$inner> for $outer {
+            fn from(arg: $inner) -> Self {
+                $outer :: new(arg)
+            }
+        }
+
         impl From<$outer> for $inner {
             fn from(arg: $outer) -> Self {
                 arg.0
@@ -99,6 +105,14 @@ pub fn gamma_decode(encoded: f32) -> f32 {
 pub struct Portion(f32);
 
 impl Portion {
+    pub fn new(percentage: f32) -> Self {
+        if !percentage.is_finite() {
+            panic!("`Portion`: Tried to convert NaN or infinite value into a percentage!")
+        }
+
+        Portion(clamp(percentage, 0.0, 1.0))
+    }
+
     /// Inverts this value.
     pub fn inv(self) -> Self {
         Portion(1.0 - self.0)
@@ -129,13 +143,17 @@ impl Deg {
     }
 }
 
-impl From<f32> for Portion {
-    fn from(p: f32) -> Self {
-        if !p.is_finite() {
-            panic!("`Portion`: Tried to convert NaN or infinite value into a percentage!")
+impl Deg {
+    fn new(degrees: f32) -> Self {
+        if !degrees.is_finite() {
+            panic!("`Deg`: Tried to convert NaN or infinite value into degrees!")
         }
 
-        Portion(clamp(p, 0.0, 1.0))
+        let mut degrees = degrees % 360.0;
+        if degrees < 0.0 {
+            degrees = degrees + 360.0;
+        }
+        Deg(degrees)
     }
 }
 
@@ -146,18 +164,6 @@ impl Ord for Portion {
 }
 
 impl Eq for Portion {}
-
-impl From<f32> for Deg {
-    fn from(h: f32) -> Self {
-        if !h.is_finite() { panic!("`Deg`: Tried to convert NaN or infinite value into degrees!") }
-
-        let mut h = h % 360.0;
-        if h < 0.0 {
-            h = h + 360.0;
-        }
-        Deg(h)
-    }
-}
 
 impl Ord for Deg {
     fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
