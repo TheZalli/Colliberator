@@ -18,8 +18,14 @@ impl<S> HSVColor<S> {
         HSVColor { h, s, v, _space: PhantomData }
     }
 
+    #[inline]
     pub fn to_tuple(&self) -> (Deg, f32, f32) {
         (self.h, self.s, self.v)
+    }
+
+    #[inline]
+    pub fn to_array(self) -> [f32; 3] {
+        [self.h.into(), self.s, self.v]
     }
 
     pub fn rgb(&self) -> RGBColor<f32, S> {
