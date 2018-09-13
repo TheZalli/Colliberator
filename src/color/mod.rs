@@ -131,7 +131,7 @@ impl RGBColor<f32, SRGBSpace> {
     /// Gamma decodes this color channel value into the linear color space
     #[inline]
     pub fn decode(self) -> RGBColor<f32, LinearSpace> {
-        self.map(&gamma_decode).to_tuple().into()
+        self.map(&std_gamma_decode).to_tuple().into()
     }
 }
 
@@ -139,7 +139,7 @@ impl RGBColor<f32, LinearSpace> {
     /// Gamma encodes this color channel value into the sRGB color space
     #[inline]
     pub fn encode(self) -> RGBColor<f32, SRGBSpace> {
-        self.map(&gamma_encode).to_tuple().into()
+        self.map(&std_gamma_encode).to_tuple().into()
     }
 
     /// Blends this color with another using the given ratio.
@@ -431,7 +431,7 @@ pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
 
     // color the text as black or white depending on the bg:s lightness
     let fg =
-        if color.to_float().decode().relative_luminance() < gamma_decode(0.5).into() {
+        if color.to_float().decode().relative_luminance() < std_gamma_decode(0.5).into() {
             format!("{}38;2;255;255;255m", CSI)
         } else {
             format!("{}38;2;;;m", CSI)

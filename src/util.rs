@@ -78,7 +78,7 @@ pub fn clamp<T: PartialOrd>(value: T, min: T, max: T) -> T {
 }
 
 /// Gamma encodes a linear value into the sRGB space
-pub fn gamma_encode(linear: f32) -> f32 {
+pub fn std_gamma_encode(linear: f32) -> f32 {
     const SRGB_CUTOFF: f32 = 0.0031308;
     if linear <= SRGB_CUTOFF {
         linear * 12.92
@@ -88,7 +88,7 @@ pub fn gamma_encode(linear: f32) -> f32 {
 }
 
 /// Gamma decodes an sRGB value into the linear space
-pub fn gamma_decode(encoded: f32) -> f32 {
+pub fn std_gamma_decode(encoded: f32) -> f32 {
     const SRGB_INV_CUTOFF: f32 = 0.04045;
     if encoded <= SRGB_INV_CUTOFF {
         encoded / 12.92

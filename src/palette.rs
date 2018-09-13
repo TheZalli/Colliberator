@@ -128,7 +128,7 @@ impl fmt::Display for ColorInfo {
         write!(f, "sRGB: ({}), HSV: ({}), lum:{:3.0}%, ",
                self.srgb,
                self.hsv,
-               100.0 * gamma_encode(self.lin_rgb.to_float().relative_luminance().into())
+               100.0 * std_gamma_encode(self.lin_rgb.to_float().relative_luminance().into())
         )?;
 
         let fun = |f: &mut fmt::Formatter, color, _weight, sep| write!(f, " {}{}", color, sep);
