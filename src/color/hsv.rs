@@ -1,48 +1,30 @@
 use std::fmt;
+use std::marker::PhantomData;
 
-//use util::*;
+use util::*;
 use color::*;
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-pub struct HSVColor {
-    pub h: f32,
+pub struct HSVColor<S> {
+    pub h: Deg,
     pub s: f32,
     pub v: f32,
-    _priv: ()
+    _space: PhantomData<S>
 }
 
-impl HSVColor {
+impl<S> HSVColor<S> {
     /// Create a new HSV value.
-    ///
-    /// Hue is given in degrees and it is wrapped between [0, 360) using modulo.
-    /// Saturation and value are given as a value between \[0, 1\].
-    ///
-    /// # Panic
-    /// If saturation and value are not between 0.0 and 1.0, this function will panic.
-    pub fn new(h: f32, s: f32, v: f32) -> Self {
-        if s < 0.0 || s > 1.0 {
-            panic!("Invalid HSV saturation: {}", s);
-        }
-        if v < 0.0 || v > 1.0 {
-            panic!("Invalid HSV value: {}", v);
-        }
-
-        let mut h = h % 360.0;
-        if h < 0.0 {
-            h = h + 360.0;
-        }
-        HSVColor { h, s, v, _priv: () }
+    pub fn new(h: Deg, s: f32, v: f32) -> Self {
+        HSVColor { h, s, v, _space: PhantomData }
     }
 
-    pub fn to_tuple(&self) -> (f32, f32, f32) {
+    pub fn to_tuple(&self) -> (Deg, f32, f32) {
         (self.h, self.s, self.v)
     }
-}
 
-impl Color for HSVColor {
-    fn srgb(&self) -> SRGBColor {
+    pub fn rgb(&self) -> RGBColor<f32, S> {
         let (h, s, v) = self.to_tuple();
-        let h = h / 60.0;
+        let (h, s, v): (f32, f32, f32) = ((h / 60.0).into(), s.into(), v.into());
 
         // largest, second largest and the smallest component
         let c = s * v;
@@ -60,13 +42,11 @@ impl Color for HSVColor {
                 _   => panic!("Invalid hue value: {}", self.h)
             };
 
-        SRGBColor::new(r+min, g+min, b+min)
+        (r+min, g+min, b+min).into()
     }
-
-    fn hsv(&self) -> HSVColor { *self }
 }
 
-impl fmt::Display for HSVColor {
+impl<S> fmt::Display for HSVColor<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:>5.1}°,{:>5.1}%,{:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)
     }

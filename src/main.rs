@@ -19,7 +19,7 @@ fn main() {
             let color_name = pal.name_color(color).unwrap();
             let color_info = ColorInfo::new(color);
 
-            let fmt_name = color.ansi_bgcolor(&format!("{:^20}", color_name)) + ":";
+            let fmt_name = ansi_bgcolor(color, &format!("{:^20}", color_name)) + ":";
 
             println!("  Color {} {}", fmt_name, color_info);
         }
@@ -38,12 +38,12 @@ fn main() {
 
     print!("\nsRGB greyscale:   ");
     for col in s.iter() {
-        print!("{}", col.ansi_bgcolor("_"));
+        print!("{}", ansi_bgcolor(*col, "_"));
     }
 
     print!("\nlinear greyscale: ");
     for col in l.iter() {
-        print!("{}", col.ansi_bgcolor("_"));
+        print!("{}", ansi_bgcolor(col.to_float().encode().quantizate_u8(), "_"));
     }
     println!();
 }

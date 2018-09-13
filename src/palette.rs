@@ -7,6 +7,7 @@ use std::iter::Iterator;
 
 use regex::Regex;
 
+use util::*;
 use error::PaletteError;
 use color::*;
 
@@ -82,13 +83,13 @@ impl Palette {
         self.colorsets.get(colorset_name)
     }*/
 
-    pub fn iter_colorsets<'a>(&'a self) -> ColorSetsIter<'a> {
+    pub fn iter_colorsets(&self) -> ColorSetsIter {
         ColorSetsIter(self.colorsets.iter())
     }
 
     /// Returns the name of the given color, if it exists.
-    pub fn name_color<T: Color>(&self, color: T) -> Option<&str> {
-        Some(self.colors.get(&color.srgb24())?.as_ref())
+    pub fn name_color(&self, color: SRGB24Color) -> Option<&str> {
+        Some(self.colors.get(&color)?.as_ref())
     }
 }
 
@@ -107,17 +108,17 @@ impl<'a> Iterator for ColorSetsIter<'a> {
 pub struct ColorInfo {
     srgb: SRGB24Color,
     lin_rgb: LinRGB48Color,
-    hsv: HSVColor,
+    hsv: HSVColor<SRGBSpace>,
     shades_of: Vec<(BaseColor, f32)>,
 }
 
 impl ColorInfo {
-    pub fn new<T: Color>(color: T) -> Self {
+    pub fn new(color: SRGB24Color) -> Self {
         ColorInfo {
-            srgb: color.srgb24(),
-            lin_rgb: color.lin_rgb48(),
-            hsv: color.hsv(),
-            shades_of: color.shades(),
+            srgb: color,
+            lin_rgb: color.to_float().decode().quantizate_u16(),
+            hsv: color.to_float().hsv(),
+            shades_of: shades(color.to_float()),
         }
     }
 }
@@ -125,7 +126,10 @@ impl ColorInfo {
 impl fmt::Display for ColorInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "sRGB: ({}), HSV: ({}), lum:{:3.0}%, ",
-               self.srgb, self.hsv, 100.0 * self.lin_rgb.gamma_relative_luminance())?;
+               self.srgb,
+               self.hsv,
+               100.0 * gamma_encode(self.lin_rgb.to_float().relative_luminance().into())
+        )?;
 
         let fun = |f: &mut fmt::Formatter, color, _weight, sep| write!(f, " {}{}", color, sep);
         let (last, shades) = self.shades_of.split_last().unwrap();

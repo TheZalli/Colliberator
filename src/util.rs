@@ -1,4 +1,5 @@
 use std::ops::{Add, Sub, Mul, Div, Rem};
+use std::fmt;
 
 /// sRGB gamma value, used for sRGB decoding and encoding.
 pub const GAMMA: f32 = 2.4;
@@ -96,45 +97,12 @@ pub fn gamma_decode(encoded: f32) -> f32 {
     }
 }
 
-/// Percentage value that will always be in the range \[0.0, 1.0\].
-///
-/// Any value outside that will be saturated to fit within the range.
-///
-/// Trying to convert NaN or infinity floating point into `Portion` will cause a panic.
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
-pub struct Portion(f32);
-
-impl Portion {
-    pub fn new(percentage: f32) -> Self {
-        if !percentage.is_finite() {
-            panic!("`Portion`: Tried to convert NaN or infinite value into a percentage!")
-        }
-
-        Portion(clamp(percentage, 0.0, 1.0))
-    }
-
-    /// Inverts this value.
-    pub fn inv(self) -> Self {
-        Portion(1.0 - self.0)
-    }
-
-    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
-    pub fn quantizate_u8(self) -> u8 {
-        (self.0 * 255.0) as u8
-    }
-
-    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
-    pub fn quantizate_u16(self) -> u16 {
-        (self.0 * u16::max_value() as f32) as u16
-    }
-}
-
 /// Degrees that will always be in the range [0, 360).
 ///
 /// Any value outside that is made to fit the range using modulo.
 ///
 /// Trying to convert NaN and infinity floating point into `Deg` will cause a panic.
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Deg(f32);
 
 impl Deg {
@@ -157,14 +125,6 @@ impl Deg {
     }
 }
 
-impl Ord for Portion {
-    fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
-        self.partial_cmp(other).unwrap()
-    }
-}
-
-impl Eq for Portion {}
-
 impl Ord for Deg {
     fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
@@ -173,17 +133,16 @@ impl Ord for Deg {
 
 impl Eq for Deg {}
 
-wrapper_struct_conv_impls!(Portion, f32);
+impl fmt::Display for Deg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
 wrapper_struct_conv_impls!(Deg, f32);
-
-wrapper_struct_impl_ops!(
-    Portion, f32;
-    Add, Sub, Mul, Div, Rem;
-    add, sub, mul, div, rem
-);
-
 wrapper_struct_impl_ops!(
     Deg, f32;
     Add, Sub, Mul, Div, Rem;
     add, sub, mul, div, rem
 );
+
