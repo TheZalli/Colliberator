@@ -137,7 +137,7 @@ impl RGBColor<f32, LinearSpace> {
     /// Ratio of 1.0 means only `self` is used, while ratio of 0.0 means only `other` is used.
     /// If ratio is outside 0.0 - 1.0, this function is undefined behaviour.
     #[inline]
-    fn blend(self, other: Self, ratio: f32) -> Self {
+    pub fn blend(self, other: Self, ratio: f32) -> Self {
         self * ratio + other * (1.0-ratio)
     }
 
@@ -164,8 +164,7 @@ impl<T, U, S> From<(T, T, T)> for RGBColor<U, S>
     }
 }
 
-impl<T: Clone, S> From<[T; 3]> for RGBColor<T, S>
-{
+impl<T: Clone, S> From<[T; 3]> for RGBColor<T, S> {
     fn from(array: [T; 3]) -> Self {
         let array = array;
         RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())

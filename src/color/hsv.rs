@@ -2,7 +2,7 @@ use std::fmt;
 use std::marker::PhantomData;
 
 use util::*;
-use color::*;
+use super::*;
 
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {

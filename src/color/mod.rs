@@ -1,6 +1,8 @@
+mod alpha;
 mod rgb;
 mod hsv;
 
+pub use self::alpha::*;
 pub use self::rgb::*;
 pub use self::hsv::*;
 
