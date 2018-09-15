@@ -7,7 +7,7 @@ use cgmath::Deg;
 //use util::*;
 use super::*;
 
-#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
     pub h: Deg<f32>,
     pub s: f32,
@@ -18,16 +18,15 @@ pub struct HSVColor<S> {
 impl<S> HSVColor<S> {
     /// Create a new HSV value.
     ///
-    /// The hue value is normalized to fit in the [0, 360) range.
+    /// The value is unnormalized, to normalize it, call `HSVColor::normalize`.
     pub fn new(h: f32, s: f32, v: f32) -> Self {
-        let h = Deg(h).normalize();
-        HSVColor { h, s, v, _space: PhantomData }
+        HSVColor { h: Deg(h), s, v, _space: PhantomData }
     }
 
-    /// Normalizes the color's values by zeroing the unnecessary channels.
+    /// Normalizes the color's values by normalizing the hue and zeroing the unnecessary channels.
     ///
-    /// If value is zero, black is returned.
-    /// If saturation is zero, hue is set to zero.
+    /// If value channel is zero, black is returned.
+    /// If saturation channel is zero, hue is set to zero.
     ///
     /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
     /// range.
@@ -79,6 +78,15 @@ impl<S> HSVColor<S> {
         (r+min, g+min, b+min).into()
     }
 }
+
+impl<S> Clone for HSVColor<S> {
+    fn clone(&self) -> Self {
+        let (h, s, v) = self.to_tuple();
+        HSVColor { h, s, v, _space: PhantomData }
+    }
+}
+
+impl<S> Copy for HSVColor<S> {}
 
 impl<S> Default for HSVColor<S> {
     fn default() -> Self {

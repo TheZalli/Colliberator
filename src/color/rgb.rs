@@ -5,7 +5,7 @@ use std::ops::{Add, Sub, Mul, Div};
 use super::*;
 
 /// An RGB color in the `S` color space.
-#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
     pub g: T,
@@ -224,6 +224,19 @@ impl<T> Div<T> for RGBColor<T, LinearSpace>
         (self.r / rhs.clone(), self.g / rhs.clone(), self.b / rhs).into()
     }
 }
+
+impl<T: Clone, S> Clone for RGBColor<T, S> {
+    fn clone(&self) -> Self {
+        RGBColor {
+            r: self.r.clone(),
+            g: self.g.clone(),
+            b: self.b.clone(),
+            _space: PhantomData
+        }
+    }
+}
+
+impl<T: Copy, S> Copy for RGBColor<T, S> {}
 
 impl<S> fmt::Display for RGBColor<u8, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
