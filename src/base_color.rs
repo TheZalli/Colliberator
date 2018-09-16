@@ -35,7 +35,7 @@ impl BaseColor {
         }
     }
 
-    #[inline] pub fn srgb(&self) -> SRGBColor { self.srgb24().to_float() }
+    #[inline] pub fn srgb(&self) -> SRGBColor { self.srgb24().into_float() }
     #[inline] pub fn lin_rgb(&self) -> LinRGBColor { self.srgb().decode() }
     #[inline] pub fn lin_rgb24(&self) -> LinRGB48Color { self.lin_rgb().quantizate_u16() }
 

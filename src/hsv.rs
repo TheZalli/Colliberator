@@ -27,7 +27,7 @@ impl<S> HSVColor<S> {
     /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
     /// range.
     pub fn normalize(self) -> Self {
-        let (h, s, v) = self.to_tuple();
+        let (h, s, v) = self.into_tuple();
         if v == 0.0 { Self::default() }
         else if s == 0.0 {
             HSVColor::new(0.0, 0.0, v)
@@ -42,12 +42,22 @@ impl<S> HSVColor<S> {
     }
 
     #[inline]
-    pub fn to_tuple(self) -> (f32, f32, f32) {
+    pub fn into_tuple(self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
     }
 
     #[inline]
-    pub fn to_array(self) -> [f32; 3] {
+    pub fn into_array(self) -> [f32; 3] {
+        [self.h, self.s, self.v]
+    }
+
+    #[inline]
+    pub fn as_tuple(&self) -> (f32, f32, f32) {
+        (self.h, self.s, self.v)
+    }
+
+    #[inline]
+    pub fn as_array(&self) -> [f32; 3] {
         [self.h, self.s, self.v]
     }
 
@@ -77,7 +87,7 @@ impl<S> HSVColor<S> {
 
 impl<S> Clone for HSVColor<S> {
     fn clone(&self) -> Self {
-        let (h, s, v) = self.to_tuple();
+        let (h, s, v) = self.into_tuple();
         HSVColor { h, s, v, _space: PhantomData }
     }
 }

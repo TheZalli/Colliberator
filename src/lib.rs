@@ -82,7 +82,7 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
 
     let mut shades = Vec::with_capacity(3);
 
-    let (h, s, _) = color.hsv().to_tuple();
+    let (h, s, _) = color.hsv().into_tuple();
 
     let lum: f32 = color.decode().relative_luminance().into();
 
@@ -140,11 +140,11 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
 /// Returns the `text` with this color as it's background color using ANSI escapes.
 pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
     const CSI: &str = "\u{1B}[";
-    let (r, g, b) = color.to_tuple();
+    let (r, g, b) = color.into_tuple();
 
     // color the text as black or white depending on the bg:s lightness
     let fg =
-        if color.to_float().decode().relative_luminance() < std_gamma_decode(0.5).into() {
+        if color.into_float().decode().relative_luminance() < std_gamma_decode(0.5).into() {
             format!("{}38;2;255;255;255m", CSI)
         } else {
             format!("{}38;2;;;m", CSI)
