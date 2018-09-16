@@ -3,6 +3,9 @@ use std::marker::PhantomData;
 
 use super::*;
 
+/// An HSV color
+///
+/// `S` is this color's colorspace
 #[derive(Debug, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
     pub h: f32,
@@ -19,7 +22,7 @@ impl<S> HSVColor<S> {
         HSVColor { h, s, v, _space: PhantomData }
     }
 
-    /// Normalizes the color's values by normalizing the hue and zeroing the unnecessary channels.
+    /// Normalize the color's values by normalizing the hue and zeroing the unnecessary channels
     ///
     /// If value channel is zero, black is returned.
     /// If saturation channel is zero, hue is set to zero.
@@ -61,6 +64,9 @@ impl<S> HSVColor<S> {
         [self.h, self.s, self.v]
     }
 
+    /// Transform this color into RGB form
+    ///
+    /// This should be done to a normalized HSV color.
     pub fn rgb(&self) -> RGBColor<f32, S> {
         let h = self.h / 60.0;
         let (s, v) = (self.s, self.v);

@@ -4,7 +4,9 @@ use std::ops::{Add, Sub, Mul, Div};
 
 use super::*;
 
-/// An RGB color in the `S` color space.
+/// An RGB color
+///
+/// `S` is this color's colorspace.
 #[derive(Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
@@ -87,13 +89,13 @@ impl<S> RGBColor<f32, S> {
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
     #[inline]
     pub fn quantizate_u8(self) -> RGBColor<u8, S> {
-        self.map(|x| (x * 255.0) as u8)
+        self.map(|x| (x * 255.0).round() as u8)
     }
 
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
     #[inline]
     pub fn quantizate_u16(self) -> RGBColor<u16, S> {
-        self.map(|x| (x * u16::max_value() as f32) as u16)
+        self.map(|x| (x * u16::max_value() as f32).round() as u16)
     }
 
     pub fn hsv(&self) -> HSVColor<S> {
@@ -259,4 +261,3 @@ impl<S> fmt::Display for RGBColor<f32, S> {
         write!(f, "{:5.1},{:5.1},{:5.1}", self.r, self.g, self.b)
     }
 }
-

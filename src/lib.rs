@@ -3,41 +3,17 @@ mod alpha;
 mod rgb;
 mod hsv;
 
-pub use self::base_color::*;
+#[cfg(test)] mod test;
+
 pub use self::alpha::*;
-pub use self::rgb::*;
-pub use self::hsv::*;
+pub use base_color::*;
+pub use rgb::*;
+pub use hsv::*;
 
 use std::str;
 
-pub type SRGBColor = RGBColor<f32, SRGBSpace>;
-pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
-
-pub type LinRGBColor = RGBColor<f32, LinearSpace>;
-pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
-
-/// sRGB gamma value, used for sRGB decoding and encoding.
-pub const GAMMA: f32 = 2.4;
-
-/// Gamma encodes a linear value into the sRGB space
-pub fn std_gamma_encode(linear: f32) -> f32 {
-    const SRGB_CUTOFF: f32 = 0.0031308;
-    if linear <= SRGB_CUTOFF {
-        linear * 12.92
-    } else {
-        linear.powf(1.0/GAMMA) * 1.055 - 0.055
-    }
-}
-
-/// Gamma decodes an sRGB value into the linear space
-pub fn std_gamma_decode(encoded: f32) -> f32 {
-    const SRGB_INV_CUTOFF: f32 = 0.04045;
-    if encoded <= SRGB_INV_CUTOFF {
-        encoded / 12.92
-    } else {
-        ((encoded + 0.055)/1.055).powf(GAMMA)
-    }
-}
+/// The sRGB gamma value, used for sRGB decoding and encoding
+pub const STD_GAMMA: f32 = 2.4;
 
 /// Marker struct for the sRGB color space
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -46,6 +22,32 @@ pub struct SRGBSpace;
 /// Marker struct for the linear color space
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct LinearSpace;
+
+pub type SRGBColor = RGBColor<f32, SRGBSpace>;
+pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
+
+pub type LinRGBColor = RGBColor<f32, LinearSpace>;
+pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
+
+/// Gamma encode a linear value into the sRGB space
+pub fn std_gamma_encode(linear: f32) -> f32 {
+    const SRGB_CUTOFF: f32 = 0.0031308;
+    if linear <= SRGB_CUTOFF {
+        linear * 12.92
+    } else {
+        linear.powf(1.0/ STD_GAMMA) * 1.055 - 0.055
+    }
+}
+
+/// Gamma decode an sRGB value into the linear space
+pub fn std_gamma_decode(encoded: f32) -> f32 {
+    const SRGB_INV_CUTOFF: f32 = 0.04045;
+    if encoded <= SRGB_INV_CUTOFF {
+        encoded / 12.92
+    } else {
+        ((encoded + 0.055)/1.055).powf(STD_GAMMA)
+    }
+}
 
 /// Categorize this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
@@ -137,7 +139,7 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
     return shades.iter_mut().map(|(color, amount)| (*color, *amount/sum)).collect();
 }
 
-/// Returns the `text` with this color as it's background color using ANSI escapes.
+/// Return the `text` with this color as it's background color using ANSI escapes
 pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
     const CSI: &str = "\u{1B}[";
     let (r, g, b) = color.into_tuple();

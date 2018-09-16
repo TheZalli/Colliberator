@@ -1,6 +1,6 @@
 use super::*;
 
-/// A transparent color `C` with an alpha channel of type `A`.
+/// A transparent color with an alpha channel
 ///
 /// Alpha of 1 means the color is fully opaque, and alpha of 0 means it's fully transparent.
 ///

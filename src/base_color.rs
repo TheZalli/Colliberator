@@ -3,7 +3,7 @@ use std::fmt;
 use super::*;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-/// The basic colors of the rainbow
+/// A basic color of the rainbow
 pub enum BaseColor {
     Black,
     Grey,
