@@ -13,12 +13,6 @@ pub struct RGBColor<T, S> {
     _space: PhantomData<S>
 }
 
-pub type SRGBColor = RGBColor<f32, SRGBSpace>;
-pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
-
-pub type LinRGBColor = RGBColor<f32, LinearSpace>;
-pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
-
 impl<T, S> RGBColor<T, S> {
     pub fn new(r: T, g: T, b: T) -> Self {
         RGBColor { r, g, b, _space: PhantomData }

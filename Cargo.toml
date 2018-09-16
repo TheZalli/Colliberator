@@ -1,9 +1,5 @@
 [package]
-name = "color-thing"
+# it's a work-in-title
+name = "my_color_lib"
 version = "0.1.0"
 authors = ["mrZalli <misterzalli@gmail.com>"]
-
-[dependencies]
-regex = "^1.0"
-lazy_static = "^1.0"
-failure = "^0.1"
