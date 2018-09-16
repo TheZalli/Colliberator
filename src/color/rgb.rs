@@ -110,7 +110,7 @@ impl<S> RGBColor<f32, S> {
                 (r - g) / delta + 4.0
             };
 
-        HSVColor::new(hue.into(), saturation, value)
+        HSVColor::new(hue, saturation, value)
     }
 }
 

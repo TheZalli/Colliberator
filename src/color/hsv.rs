@@ -1,15 +1,11 @@
 use std::fmt;
 use std::marker::PhantomData;
 
-use cgmath::prelude::*;
-use cgmath::Deg;
-
-//use util::*;
 use super::*;
 
 #[derive(Debug, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
-    pub h: Deg<f32>,
+    pub h: f32,
     pub s: f32,
     pub v: f32,
     _space: PhantomData<S>
@@ -20,7 +16,7 @@ impl<S> HSVColor<S> {
     ///
     /// The value is unnormalized, to normalize it, call `HSVColor::normalize`.
     pub fn new(h: f32, s: f32, v: f32) -> Self {
-        HSVColor { h: Deg(h), s, v, _space: PhantomData }
+        HSVColor { h, s, v, _space: PhantomData }
     }
 
     /// Normalizes the color's values by normalizing the hue and zeroing the unnecessary channels.
@@ -31,32 +27,32 @@ impl<S> HSVColor<S> {
     /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
     /// range.
     pub fn normalize(self) -> Self {
-        if self.v == 0.0 { Self::default() }
-        else if self.s == 0.0 {
-            HSVColor::new(0.0, 0.0, self.v)
+        let (h, s, v) = self.to_tuple();
+        if v == 0.0 { Self::default() }
+        else if s == 0.0 {
+            HSVColor::new(0.0, 0.0, v)
         }
         else {
-            HSVColor {
-                h: self.h.normalize(),
-                s: self.s,
-                v: self.v,
-                _space: PhantomData
+            let mut h = h % 360.0;
+            if h < 0.0 {
+                h += 360.0;
             }
+            HSVColor { h, s, v, _space: PhantomData }
         }
     }
 
     #[inline]
-    pub fn to_tuple(self) -> (Deg<f32>, f32, f32) {
+    pub fn to_tuple(self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
     }
 
     #[inline]
     pub fn to_array(self) -> [f32; 3] {
-        [self.h.0, self.s, self.v]
+        [self.h, self.s, self.v]
     }
 
     pub fn rgb(&self) -> RGBColor<f32, S> {
-        let h = self.h.0 / 60.0;
+        let h = self.h / 60.0;
         let (s, v) = (self.s, self.v);
 
         // largest, second largest and the smallest component
@@ -72,7 +68,7 @@ impl<S> HSVColor<S> {
                 3   => (0.0,   x,   c),
                 4   => (  x, 0.0,   c),
                 5|6 => (  c, 0.0,   x),
-                _   => panic!("Invalid hue value: {}", self.h.0)
+                _   => panic!("Invalid hue value: {}", self.h)
             };
 
         (r+min, g+min, b+min).into()
@@ -96,6 +92,6 @@ impl<S> Default for HSVColor<S> {
 
 impl<S> fmt::Display for HSVColor<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:>5.1}°,{:>5.1}%,{:>5.1}%", self.h.0, self.s * 100.0, self.v * 100.0)
+        write!(f, "{:>5.1}°,{:>5.1}%,{:>5.1}%", self.h, self.s * 100.0, self.v * 100.0)
     }
 }

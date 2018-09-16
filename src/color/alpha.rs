@@ -1,5 +1,3 @@
-use cgmath::Deg;
-
 use super::*;
 
 /// A transparent color `C` with an alpha channel of type `A`.
@@ -36,14 +34,14 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
 }
 
 impl<S, A> Alpha<HSVColor<S>, A> {
-    pub fn to_tuple4(self) -> (Deg<f32>, f32, f32, A) {
+    pub fn to_tuple4(self) -> (f32, f32, f32, A) {
         (self.color.h, self.color.s, self.color.v, self.alpha)
     }
 }
 
 impl<S> Alpha<HSVColor<S>, f32> {
     pub fn to_array4(self) -> [f32; 4] {
-        [self.color.h.0, self.color.s, self.color.v, self.alpha]
+        [self.color.h, self.color.s, self.color.v, self.alpha]
     }
 }
 
