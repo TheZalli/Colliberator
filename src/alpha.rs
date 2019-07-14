@@ -99,9 +99,26 @@ impl<S> From<RGBColor<f32, S>> for Alpha<RGBColor<f32, S>, f32> {
     }
 }
 
-/*macro_rules! alpha_impl_ops {
-    ( $( $op_trait: ident ),+ ; $( $op_fun:ident ),+ ) => { $(
-        impl<C, A> $op_trait for Alpha<C, A>
-            where C: $op_trait
-    ),+ };
-}*/
+impl<T, C: From<(T, T, T)>, A> From<(T, T, T, A)> for Alpha<C, A> {
+    fn from(tuple: (T, T, T, A)) -> Self {
+        Alpha::new((tuple.0, tuple.1, tuple.2).into(), tuple.3)
+    }
+}
+
+impl<T: Clone, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
+    fn from(array: [T; 4]) -> Self {
+        Alpha::new(
+            [array[0].clone(), array[1].clone(), array[2].clone()].into(),
+            array[3].clone()
+        )
+    }
+}
+
+impl<T: Clone, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
+    fn from(array: &[T; 4]) -> Self {
+        Alpha::new(
+            [array[0].clone(), array[1].clone(), array[2].clone()].into(),
+            array[3].clone()
+        )
+    }
+}

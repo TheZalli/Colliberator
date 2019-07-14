@@ -91,6 +91,25 @@ impl<S> HSVColor<S> {
     }
 }
 
+impl<S> From<(f32, f32, f32)> for HSVColor<S> {
+    fn from(tuple: (f32, f32, f32)) -> Self {
+        let (h, s, v) = tuple;
+        HSVColor::new(h, s, v)
+    }
+}
+
+impl<S> From<[f32; 3]> for HSVColor<S> {
+    fn from(array: [f32; 3]) -> Self {
+        HSVColor::new(array[0], array[1], array[2])
+    }
+}
+
+impl<S> From<&[f32; 3]> for HSVColor<S> {
+    fn from(array: &[f32; 3]) -> Self {
+        HSVColor::new(array[0], array[1], array[2])
+    }
+}
+
 impl<S> Clone for HSVColor<S> {
     fn clone(&self) -> Self {
         let (h, s, v) = self.into_tuple();

@@ -166,13 +166,18 @@ impl RGBColor<f32, LinearSpace> {
 impl<T, S> From<(T, T, T)> for RGBColor<T, S> {
     fn from(tuple: (T, T, T)) -> Self {
         let (r, g, b) = tuple;
-        RGBColor { r, g, b, _space: PhantomData}
+        RGBColor::new(r, g, b)
     }
 }
 
 impl<T: Clone, S> From<[T; 3]> for RGBColor<T, S> {
     fn from(array: [T; 3]) -> Self {
-        let array = array;
+        RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())
+    }
+}
+
+impl<T: Clone, S> From<&[T; 3]> for RGBColor<T, S> {
+    fn from(array: &[T; 3]) -> Self {
         RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())
     }
 }
