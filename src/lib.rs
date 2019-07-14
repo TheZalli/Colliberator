@@ -23,11 +23,39 @@ pub struct SRGBSpace;
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct LinearSpace;
 
+/// Trait for colors
+pub trait Color: Sized {
+    /// Normalizes this color
+    ///
+    /// All the channels should be made to fit their regular ranges and special cases (like HSV
+    /// value channel being zero) should be unified.
+    fn normalize(self) -> Self;
+
+    /// Return true if this color is in it's colorspaces gamut
+    ///
+    /// If it's not, calling `normalize` should put it back.
+    fn in_gamut(&self) -> bool;
+}
+
+/// Trait for colors that can be blended
+pub trait Blend<FG> {
+    type Output;
+
+    /// Blend this color with another
+    fn blend(&self, other: &FG) -> Self::Output;
+}
+
 pub type SRGBColor = RGBColor<f32, SRGBSpace>;
 pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
 
 pub type LinRGBColor = RGBColor<f32, LinearSpace>;
 pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
+
+pub type SRGBAColor = Alpha<RGBColor<f32, SRGBSpace>, f32>;
+pub type SRGBA24Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
+
+pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
+pub type LinRGBA48Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
 /// Gamma encode a linear value into the sRGB space
 pub fn std_gamma_encode(linear: f32) -> f32 {

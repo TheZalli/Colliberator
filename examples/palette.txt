@@ -83,7 +83,7 @@ Murky colors:
 * Cherry            #ac2854
 
 Warm colors:
-* Scarlet           #ff361c
+* Scarlet           #fb1d00
 * Carrot            #ff7d0d
 * Amber             #eed41f
 * Lime              #88db1a

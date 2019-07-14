@@ -137,7 +137,7 @@ impl RGBColor<f32, LinearSpace> {
         self.map(&std_gamma_encode).into_tuple().into()
     }
 
-    /// Blends this color with another using the given ratio.
+    /// Blends this color with another using the given ratio
     ///
     /// Blends in the linear RGB space.
     ///
