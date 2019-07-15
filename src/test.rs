@@ -26,3 +26,16 @@ fn srgb_to_linear_to_hsv() {
 
     assert_eq!(srgb, srgb2)
 }
+
+#[test]
+fn hex_conversion() {
+    for hex in (0..=0xFFFFFF).step_by(30_000) {
+        let hex_str: String = format!("{:06X}", hex);
+        let color = unsafe {
+            SRGB24Color::from_hex_unchecked(hex_str.clone().into_boxed_str())
+        };
+        let hex_str2 = format!("{:X}", color);
+
+        assert_eq!(hex_str, hex_str2);
+    }
+}
