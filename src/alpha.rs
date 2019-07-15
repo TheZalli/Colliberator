@@ -1,3 +1,5 @@
+use std::fmt;
+
 use super::*;
 
 /// A transparent color with an alpha channel
@@ -120,5 +122,16 @@ impl<T: Clone, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
             [array[0].clone(), array[1].clone(), array[2].clone()].into(),
             array[3].clone()
         )
+    }
+}
+impl<C: fmt::UpperHex> fmt::UpperHex for Alpha<C, u8> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:X}{:02X}", self.color, self.alpha)
+    }
+}
+
+impl<C: fmt::LowerHex> fmt::LowerHex for Alpha<C, u8> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:x}{:02x}", self.color, self.alpha)
     }
 }

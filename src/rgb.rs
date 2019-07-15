@@ -266,3 +266,15 @@ impl<S> fmt::Display for RGBColor<f32, S> {
         write!(f, "{:5.1},{:5.1},{:5.1}", self.r, self.g, self.b)
     }
 }
+
+impl<S> fmt::UpperHex for RGBColor<u8, S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:02X}{:02X}{:02X}", self.r, self.g, self.b)
+    }
+}
+
+impl<S> fmt::LowerHex for RGBColor<u8, S> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:02x}{:02x}{:02x}", self.r, self.g, self.b)
+    }
+}
