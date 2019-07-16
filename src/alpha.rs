@@ -7,7 +7,7 @@ use super::*;
 /// Alpha of 1 means the color is fully opaque, and alpha of 0 means it's fully transparent.
 ///
 /// This uses a straight alpha, not a premultiplied alpha.
-#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Alpha<C, A> {
     pub color: C,
     pub alpha: A
@@ -68,6 +68,24 @@ impl Alpha<LinRGBColor, f32> {
         ) / alpha;
 
         Alpha { color, alpha }
+    }
+}
+
+impl<C: Default> Default for Alpha<C, f32> {
+    fn default() -> Self {
+        Alpha::new(C::default(), 1.0)
+    }
+}
+
+impl<C: Default> Default for Alpha<C, u8> {
+    fn default() -> Self {
+        Alpha::new(C::default(), 255u8)
+    }
+}
+
+impl<C: Default> Default for Alpha<C, u16> {
+    fn default() -> Self {
+        Alpha::new(C::default(), u16::max_value())
     }
 }
 
