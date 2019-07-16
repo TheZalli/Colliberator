@@ -137,18 +137,6 @@ impl RGBColor<f32, LinearSpace> {
         self.map(&std_gamma_encode).into_tuple().into()
     }
 
-    /// Blends this color with another using the given ratio
-    ///
-    /// Blends in the linear RGB space.
-    ///
-    /// Ratio of 0.5 means both colors are used equally.
-    /// Ratio of 1.0 means only `self` is used, while ratio of 0.0 means only `other` is used.
-    /// If ratio is outside 0.0 - 1.0, this function is undefined behaviour.
-    #[inline]
-    pub fn blend(self, other: Self, ratio: f32) -> Self {
-        self * ratio + other * (1.0-ratio)
-    }
-
     /// Returns the relative luminance of this color between 0 and 1.
     ///
     /// Tells the whiteness of the color as perceived by humans.

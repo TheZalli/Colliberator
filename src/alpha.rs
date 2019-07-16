@@ -47,30 +47,6 @@ impl<S> Alpha<HSVColor<S>, f32> {
     }
 }
 
-impl Alpha<LinRGBColor, f32> {
-    /// Alpha blend this color with the given opaque background color.
-    pub fn blend(self, bg: LinRGBColor) -> LinRGBColor {
-        self.color.blend(bg, self.alpha)
-    }
-
-    /// Alpha blend this color with the given background color.
-    pub fn alpha_blend<T: Into<Self>>(self, bg: T) -> Self {
-        let bg = bg.into();
-
-        let alpha = self.alpha + bg.alpha * (1.0 - self.alpha);
-        if alpha == 0.0 {
-            return Alpha::default();
-        }
-
-        let color = (
-            self.color * self.alpha +
-            bg.color * bg.alpha * (1.0 - self.alpha)
-        ) / alpha;
-
-        Alpha { color, alpha }
-    }
-}
-
 impl<C: Default> Default for Alpha<C, f32> {
     fn default() -> Self {
         Alpha::new(C::default(), 1.0)

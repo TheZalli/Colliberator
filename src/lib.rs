@@ -2,6 +2,7 @@ mod base;
 mod alpha;
 mod rgb;
 mod hsv;
+mod blend;
 
 pub mod space;
 
@@ -13,6 +14,7 @@ pub use base::*;
 pub use self::alpha::*;
 pub use rgb::*;
 pub use hsv::*;
+pub use blend::*;
 
 use space::{LinearSpace, SRGBSpace, std_gamma_decode, std_gamma_encode};
 
@@ -30,14 +32,6 @@ pub trait Color: Sized {
     fn in_gamut(&self) -> bool;
 }
 
-/// Trait for colors that can be blended
-pub trait Blend<FG> {
-    type Output;
-
-    /// Blend this color with another
-    fn blend(&self, other: &FG) -> Self::Output;
-}
-
 pub type SRGBColor = RGBColor<f32, SRGBSpace>;
 pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
 
@@ -48,7 +42,7 @@ pub type SRGBAColor = Alpha<RGBColor<f32, SRGBSpace>, f32>;
 pub type SRGBA32Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
 
 pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
-pub type LinRGBA32Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
+pub type LinRGBA64Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
 /// Categorize this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
