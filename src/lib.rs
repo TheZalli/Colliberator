@@ -52,10 +52,10 @@ pub type LinRGBColor = RGBColor<f32, LinearSpace>;
 pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
 
 pub type SRGBAColor = Alpha<RGBColor<f32, SRGBSpace>, f32>;
-pub type SRGBA24Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
+pub type SRGBA32Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
 
 pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
-pub type LinRGBA48Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
+pub type LinRGBA32Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
 /// Gamma encode a linear value into the sRGB space
 pub fn std_gamma_encode(linear: f32) -> f32 {
