@@ -1,27 +1,20 @@
-mod base_color;
+mod base;
 mod alpha;
 mod rgb;
 mod hsv;
 
-#[cfg(test)] mod test;
+pub mod space;
 
-pub use self::alpha::*;
-pub use base_color::*;
-pub use rgb::*;
-pub use hsv::*;
+#[cfg(test)] mod test;
 
 use std::str;
 
-/// The sRGB gamma value, used for sRGB decoding and encoding
-pub const STD_GAMMA: f32 = 2.4;
+pub use base::*;
+pub use self::alpha::*;
+pub use rgb::*;
+pub use hsv::*;
 
-/// Marker struct for the sRGB color space
-#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct SRGBSpace;
-
-/// Marker struct for the linear color space
-#[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub struct LinearSpace;
+use space::{LinearSpace, SRGBSpace, std_gamma_decode, std_gamma_encode};
 
 /// Trait for colors
 pub trait Color: Sized {
@@ -56,26 +49,6 @@ pub type SRGBA32Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
 
 pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
 pub type LinRGBA32Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
-
-/// Gamma encode a linear value into the sRGB space
-pub fn std_gamma_encode(linear: f32) -> f32 {
-    const SRGB_CUTOFF: f32 = 0.0031308;
-    if linear <= SRGB_CUTOFF {
-        linear * 12.92
-    } else {
-        linear.powf(1.0/ STD_GAMMA) * 1.055 - 0.055
-    }
-}
-
-/// Gamma decode an sRGB value into the linear space
-pub fn std_gamma_decode(encoded: f32) -> f32 {
-    const SRGB_INV_CUTOFF: f32 = 0.04045;
-    if encoded <= SRGB_INV_CUTOFF {
-        encoded / 12.92
-    } else {
-        ((encoded + 0.055)/1.055).powf(STD_GAMMA)
-    }
-}
 
 /// Categorize this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
