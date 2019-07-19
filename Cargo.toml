@@ -1,5 +1,4 @@
 [package]
-# it's a work-in-title
-name = "my_color_lib"
+name = "colliberator"
 version = "0.1.0"
 authors = ["Zalli <misterzalli@gmail.com>"]
