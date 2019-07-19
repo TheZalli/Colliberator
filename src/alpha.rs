@@ -13,39 +13,45 @@ pub struct Alpha<C, A> {
     pub alpha: A
 }
 
-impl<C, A> Alpha<C, A> {
+impl<C, A: Channel> Alpha<C, A> {
+    /// Creates a new alpha channel.
+    ///
+    /// This makes sure that the alpha-channel is in the proper range
+    /// by calling `Channel::to_range`
     pub fn new(color: C, alpha: A) -> Self {
-        Alpha { color, alpha }
+        Alpha { color, alpha: alpha.to_range() }
     }
 }
 
-impl<T, S, A> Alpha<RGBColor<T, S>, A> {
+impl<C: Color, A: Channel> Color for Alpha<C, A> {
+    fn normalize(self) -> Self {
+        let color = self.color.normalize();
+        let alpha = self.alpha.to_range();
+        Alpha { color, alpha }
+    }
+
+    fn is_normal(&self) -> bool {
+        self.color.is_normal() && self.alpha.in_range()
+    }
+}
+
+impl<T, A, S> Alpha<RGBColor<T, S>, A> {
+    /// Deconstructs this color into a tuple of it's channels
     pub fn tuple(self) -> (T, T, T, A) {
         (self.color.r, self.color.g, self.color.b, self.alpha)
     }
 }
 
 impl<T, S> Alpha<RGBColor<T, S>, T> {
+    /// Deconstructs this color into an array of it's channels
     pub fn array(self) -> [T; 4] {
         [self.color.r, self.color.g, self.color.b, self.alpha]
     }
 }
 
-impl<C: Default> Default for Alpha<C, f32> {
+impl<C: Default, A: Channel> Default for Alpha<C, A> {
     fn default() -> Self {
-        Alpha::new(C::default(), 1.0)
-    }
-}
-
-impl<C: Default> Default for Alpha<C, u8> {
-    fn default() -> Self {
-        Alpha::new(C::default(), 255u8)
-    }
-}
-
-impl<C: Default> Default for Alpha<C, u16> {
-    fn default() -> Self {
-        Alpha::new(C::default(), u16::max_value())
+        Alpha::new(C::default(), A::ch_max())
     }
 }
 
@@ -79,13 +85,13 @@ impl<S> From<RGBColor<f32, S>> for Alpha<RGBColor<f32, S>, f32> {
     }
 }
 
-impl<T, C: From<(T, T, T)>, A> From<(T, T, T, A)> for Alpha<C, A> {
+impl<T, C: From<(T, T, T)>, A: Channel> From<(T, T, T, A)> for Alpha<C, A> {
     fn from(tuple: (T, T, T, A)) -> Self {
         Alpha::new((tuple.0, tuple.1, tuple.2).into(), tuple.3)
     }
 }
 
-impl<T: Clone, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
+impl<T: Clone + Channel, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
     fn from(array: [T; 4]) -> Self {
         Alpha::new(
             [array[0].clone(), array[1].clone(), array[2].clone()].into(),
@@ -94,7 +100,7 @@ impl<T: Clone, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
     }
 }
 
-impl<T: Clone, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
+impl<T: Clone + Channel, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
     fn from(array: &[T; 4]) -> Self {
         Alpha::new(
             [array[0].clone(), array[1].clone(), array[2].clone()].into(),

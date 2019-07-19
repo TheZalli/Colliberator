@@ -7,7 +7,7 @@ use super::*;
 /// An RGB color
 ///
 /// `S` is this color's colorspace.
-#[derive(Debug, Clone, Copy, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
     pub g: T,
@@ -15,15 +15,32 @@ pub struct RGBColor<T, S> {
     _space: PhantomData<S>
 }
 
-impl<T, S> RGBColor<T, S> {
+impl<T: Channel, S> RGBColor<T, S>  {
+    /// Creates a new RGB-color with the given values
+    ///
+    /// They are clamped to the allowed color channel range
     pub fn new(r: T, g: T, b: T) -> Self {
-        RGBColor { r, g, b, _space: PhantomData }
+        RGBColor { r, g, b, _space: PhantomData }.normalize()
+    }
+}
+
+impl<T: Channel, S> Color for RGBColor<T, S> {
+     #[inline]
+    fn normalize(self) -> Self {
+        self.map(Channel::to_range)
     }
 
+    #[inline]
+    fn is_normal(&self) -> bool {
+        self.r.in_range() && self.g.in_range() && self.b.in_range()
+    }
+}
+
+impl<T, S> RGBColor<T, S> {
     /// Applies the given function to all color channels.
     #[inline]
     pub fn map<U, F: Fn(T) -> U>(self, fun: F) -> RGBColor<U, S> {
-        (fun(self.r), fun(self.g), fun(self.b)).into()
+        RGBColor { r: fun(self.r), g: fun(self.g), b: fun(self.b), _space: PhantomData }
     }
 
     #[inline]
@@ -34,18 +51,6 @@ impl<T, S> RGBColor<T, S> {
     #[inline]
     pub fn array(self) -> [T; 3] {
         [self.r, self.g, self.b]
-    }
-}
-
-impl<T: Clone, S> RGBColor<T, S> {
-    #[inline]
-    pub fn as_tuple(&self) -> (T, T, T) {
-        (self.r.clone(), self.g.clone(), self.b.clone())
-    }
-
-    #[inline]
-    pub fn as_array(&self) -> [T; 3] {
-        [self.r.clone(), self.g.clone(), self.b.clone()]
     }
 }
 
@@ -97,8 +102,8 @@ impl<S> RGBColor<f32, S> {
         self.map(|x| (x * u16::max_value() as f32).round() as u16)
     }
 
-    pub fn hsv(&self) -> HSVColor<S> {
-        let (r, g, b) = self.as_tuple();
+    pub fn hsv(self) -> HSVColor<S> {
+        let (r, g, b) = self.tuple();
 
         let max = r.max(g).max(b);
         let min = r.min(g).min(b);
@@ -150,27 +155,33 @@ impl RGBColor<f32, LinearSpace> {
     }
 }
 
-impl<T, S> From<(T, T, T)> for RGBColor<T, S> {
+impl<T: Channel, S> Default for RGBColor<T, S> {
+    fn default() -> Self {
+        RGBColor::new(T::ch_min(), T::ch_min(), T::ch_min())
+    }
+}
+
+impl<T: Channel, S> From<(T, T, T)> for RGBColor<T, S> {
     fn from(tuple: (T, T, T)) -> Self {
         let (r, g, b) = tuple;
         RGBColor::new(r, g, b)
     }
 }
 
-impl<T: Clone, S> From<[T; 3]> for RGBColor<T, S> {
+impl<T: Clone + Channel, S> From<[T; 3]> for RGBColor<T, S> {
     fn from(array: [T; 3]) -> Self {
         RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())
     }
 }
 
-impl<T: Clone, S> From<&[T; 3]> for RGBColor<T, S> {
+impl<T: Clone + Channel, S> From<&[T; 3]> for RGBColor<T, S> {
     fn from(array: &[T; 3]) -> Self {
         RGBColor::new(array[0].clone(), array[1].clone(), array[2].clone())
     }
 }
 
 impl<T> Add for RGBColor<T, LinearSpace>
-    where T: Add<Output=T>
+    where T: Channel + Add<Output=T>
 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
@@ -179,7 +190,7 @@ impl<T> Add for RGBColor<T, LinearSpace>
 }
 
 impl<T> Sub for RGBColor<T, LinearSpace>
-    where T: Sub<Output=T>
+    where T: Channel + Sub<Output=T>
 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -188,7 +199,7 @@ impl<T> Sub for RGBColor<T, LinearSpace>
 }
 
 impl<T> Mul for RGBColor<T, LinearSpace>
-    where T: Mul<Output=T>
+    where T: Channel + Mul<Output=T>
 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -197,7 +208,7 @@ impl<T> Mul for RGBColor<T, LinearSpace>
 }
 
 impl<T> Div for RGBColor<T, LinearSpace>
-    where T: Div<Output=T>
+    where T: Channel + Div<Output=T>
 {
     type Output = Self;
     fn div(self, rhs: Self) -> Self::Output {
@@ -206,7 +217,7 @@ impl<T> Div for RGBColor<T, LinearSpace>
 }
 
 impl<T> Mul<T> for RGBColor<T, LinearSpace>
-    where T: Mul<Output=T> + Clone
+    where T: Channel + Mul<Output=T> + Clone
 {
     type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
@@ -215,7 +226,7 @@ impl<T> Mul<T> for RGBColor<T, LinearSpace>
 }
 
 impl<T> Div<T> for RGBColor<T, LinearSpace>
-    where T: Div<Output=T> + Clone
+    where T: Channel + Div<Output=T> + Clone
 {
     type Output = Self;
     fn div(self, rhs: T) -> Self::Output {

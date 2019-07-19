@@ -1,3 +1,4 @@
+mod channel;
 mod base;
 mod alpha;
 mod rgb;
@@ -10,6 +11,7 @@ pub mod space;
 
 use std::str;
 
+pub use channel::*;
 pub use base::*;
 pub use self::alpha::*;
 pub use rgb::*;
@@ -18,7 +20,7 @@ pub use blend::*;
 
 use space::{LinearSpace, SRGBSpace, std_gamma_decode, std_gamma_encode};
 
-/// Trait for colors
+/// A trait for colors
 pub trait Color: Sized {
     /// Normalizes this color
     ///
@@ -26,10 +28,10 @@ pub trait Color: Sized {
     /// value channel being zero) should be unified.
     fn normalize(self) -> Self;
 
-    /// Return true if this color is in it's colorspaces gamut
+    /// Return true if this color is normalized
     ///
     /// If it's not, calling `normalize` should put it back.
-    fn in_gamut(&self) -> bool;
+    fn is_normal(&self) -> bool;
 }
 
 pub type SRGBColor = RGBColor<f32, SRGBSpace>;

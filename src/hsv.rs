@@ -22,28 +22,6 @@ impl<S> HSVColor<S> {
         HSVColor { h, s, v, _space: PhantomData }
     }
 
-    /// Normalize the color's values by normalizing the hue and zeroing the unnecessary channels
-    ///
-    /// If value channel is zero, black is returned.
-    /// If saturation channel is zero, hue is set to zero.
-    ///
-    /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
-    /// range.
-    pub fn normalize(self) -> Self {
-        let (h, s, v) = self.tuple();
-        if v == 0.0 { Self::default() }
-        else if s == 0.0 {
-            HSVColor::new(0.0, 0.0, v)
-        }
-        else {
-            let mut h = h % 360.0;
-            if h < 0.0 {
-                h += 360.0;
-            }
-            HSVColor { h, s, v, _space: PhantomData }
-        }
-    }
-
     #[inline]
     pub fn tuple(self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
@@ -90,6 +68,49 @@ impl<S> HSVColor<S> {
         (r+min, g+min, b+min).into()
     }
 }
+
+impl<S> Color for HSVColor<S> {
+    /// Normalize the color's values by normalizing the hue and zeroing the unnecessary channels
+    ///
+    /// If value channel is zero, black is returned.
+    /// If saturation channel is zero, hue is set to zero.
+    ///
+    /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
+    /// range.
+    fn normalize(self) -> Self {
+        let (h, s, v) = self.tuple();
+        if v == 0.0 { Self::default() }
+        else if s == 0.0 {
+            HSVColor::new(0.0, 0.0, v)
+        }
+        else {
+            let mut h = h % 360.0;
+            if h < 0.0 {
+                h += 360.0;
+            }
+            HSVColor { h, s, v, _space: PhantomData }
+        }
+    }
+
+    fn is_normal(&self) -> bool {
+        let (h, s, v) = self.as_tuple();
+
+        if !s.is_normal() || !v.is_normal() {
+            false
+        } else if h < 0.0 || h > 360.0 {
+            false
+        } else if v == 0.0 {
+            // color black
+            if h == 0.0 && s == 0.0 { true }
+            else { false }
+        } else if s == 0.0 {
+            // a grey color
+            if h == 0.0 { true }
+            else { false }
+        } else { true }
+    }
+}
+
 
 impl<S> From<(f32, f32, f32)> for HSVColor<S> {
     fn from(tuple: (f32, f32, f32)) -> Self {
