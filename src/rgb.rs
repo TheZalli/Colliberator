@@ -6,7 +6,7 @@ use super::*;
 
 /// An RGB color
 ///
-/// `S` is this color's colorspace.
+/// `T` is the type of this color's channels, and `S` is this color's colorspace.
 #[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
@@ -43,11 +43,13 @@ impl<T, S> RGBColor<T, S> {
         RGBColor { r: fun(self.r), g: fun(self.g), b: fun(self.b), _space: PhantomData }
     }
 
+    /// Deconstructs this color into a tuple of it's channels
     #[inline]
     pub fn tuple(self) -> (T, T, T) {
         (self.r, self.g, self.b)
     }
 
+    /// Deconstructs this color into an array of it's channels
     #[inline]
     pub fn array(self) -> [T; 3] {
         [self.r, self.g, self.b]

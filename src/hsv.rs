@@ -5,7 +5,7 @@ use super::*;
 
 /// An HSV color
 ///
-/// `S` is this color's colorspace
+/// `T` is the type of this color's channels, and `S` is this color's colorspace.
 #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
     pub h: f32,
@@ -22,21 +22,25 @@ impl<S> HSVColor<S> {
         HSVColor { h, s, v, _space: PhantomData }
     }
 
+    /// Deconstructs this color into a tuple of it's channels
     #[inline]
     pub fn tuple(self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
     }
 
+    /// Deconstructs this color into an array of it's channels
     #[inline]
     pub fn array(self) -> [f32; 3] {
         [self.h, self.s, self.v]
     }
 
+    /// Creates a tuple of this color's channels from a reference
     #[inline]
     pub fn as_tuple(&self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
     }
 
+    /// Creates an array of this color's channels from a reference
     #[inline]
     pub fn as_array(&self) -> [f32; 3] {
         [self.h, self.s, self.v]

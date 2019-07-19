@@ -17,6 +17,7 @@ pub enum BaseColor {
 }
 
 impl BaseColor {
+    /// Transform this base color into a sRGB color with 8-bit integer channels
     #[inline]
     pub fn srgb24(&self) -> SRGB24Color {
         use self::BaseColor::*;
@@ -35,10 +36,16 @@ impl BaseColor {
         }
     }
 
+    /// Transform this base color into a sRGB color with 32-bit floating point channels
     #[inline] pub fn srgb(&self) -> SRGBColor { self.srgb24().float() }
-    #[inline] pub fn lin_rgb(&self) -> LinRGBColor { self.srgb().std_decode() }
+
+    /// Transform this base color into a linear RGB color with 24-bit integer channels
     #[inline] pub fn lin_rgb24(&self) -> LinRGB48Color { self.lin_rgb().uint16() }
 
+    /// Transform this base color into a linear RGB color with 32-bit floating point channels
+    #[inline] pub fn lin_rgb(&self) -> LinRGBColor { self.srgb().std_decode() }
+
+    /// Transform this base color into a HSV color
     #[inline]
     pub fn hsv(&self) -> HSVColor<SRGBSpace> {
         use self::BaseColor::*;

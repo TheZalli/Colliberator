@@ -2,6 +2,7 @@ use crate::*;
 
 /// Trait for colors that can be blended
 pub trait Blend<FG> {
+    /// Type of the value that determines the ratio of the colors being blended
     type Ratio;
 
     /// Blend this color with another using the given ratio

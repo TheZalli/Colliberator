@@ -34,19 +34,27 @@ pub trait Color: Sized {
     fn is_normal(&self) -> bool;
 }
 
+/// A 96-bit sRGB color with 32-bit floating point channels
 pub type SRGBColor = RGBColor<f32, SRGBSpace>;
+/// A 24-bit sRGB color with 8-bit integer channels
 pub type SRGB24Color = RGBColor<u8, SRGBSpace>;
 
+/// A 96-bit linear RGB color with 32-bit floating point channels
 pub type LinRGBColor = RGBColor<f32, LinearSpace>;
+/// A 48-bit linear RGB color with 16-bit integer channels
 pub type LinRGB48Color = RGBColor<u16, LinearSpace>;
 
+/// A 128-bit sRGBA color with 32-bit floating point channels
 pub type SRGBAColor = Alpha<RGBColor<f32, SRGBSpace>, f32>;
+/// A 32-bit sRGBA color with 8-bit integer channels
 pub type SRGBA32Color = Alpha<RGBColor<u8, SRGBSpace>, u8>;
 
+/// A 128-bit linear RGBA color with 32-bit floating point channels
 pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
+/// A 64-bit linear RGBA color with 16-bit integer channels
 pub type LinRGBA64Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
-/// Categorize this color's most prominent shades
+/// Classify this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
     use self::BaseColor::*;
 
@@ -57,7 +65,7 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
          (240.0, Blue),
          (300.0, Magenta)];
 
-    // all of these borders have been picked by what looks nice
+    // these values below have been picked by what gives nice results
     // they could be improved
 
     // how many degrees from the main hue can a shade be
@@ -137,13 +145,16 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
 }
 
 /// Return the `text` with this color as it's background color using ANSI escapes
+///
+/// The text itself will be colored white or black, depending on the relative
+/// luminance (or "whiteness") of the color.
 pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
     const CSI: &str = "\u{1B}[";
     let (r, g, b) = color.tuple();
 
     // color the text as black or white depending on the bg:s lightness
     let fg =
-        if color.float().std_decode().relative_luminance() < std_gamma_decode(0.5).into() {
+        if color.float().std_decode().relative_luminance() < std_gamma_decode(0.5) {
             format!("{}38;2;255;255;255m", CSI)
         } else {
             format!("{}38;2;;;m", CSI)

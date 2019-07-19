@@ -11,7 +11,7 @@ pub struct SRGBSpace;
 #[derive(Debug, Default, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct LinearSpace;
 
-/// Gamma encode a linear value into the sRGB space
+/// Gamma encode a linear color channel into the sRGB space
 pub fn std_gamma_encode(linear: f32) -> f32 {
     const SRGB_CUTOFF: f32 = 0.0031308;
     if linear <= SRGB_CUTOFF {
@@ -21,7 +21,7 @@ pub fn std_gamma_encode(linear: f32) -> f32 {
     }
 }
 
-/// Gamma decode an sRGB value into the linear space
+/// Gamma decode an sRGB color channel into the linear space
 pub fn std_gamma_decode(encoded: f32) -> f32 {
     const SRGB_INV_CUTOFF: f32 = 0.04045;
     if encoded <= SRGB_INV_CUTOFF {
