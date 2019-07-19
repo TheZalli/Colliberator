@@ -79,47 +79,41 @@ impl<C, A> AsMut<C> for Alpha<C, A> {
     }
 }
 
-impl<S> From<RGBColor<u8, S>> for Alpha<RGBColor<u8, S>, u8> {
-    fn from(color: RGBColor<u8, S>) -> Self {
-        Alpha::new(color, 255)
+impl<T: Color, A: Channel> From<T> for Alpha<T, A> {
+    fn from(color: T) -> Self {
+        Alpha::new(color, A::ch_max())
     }
 }
 
-impl<S> From<RGBColor<u16, S>> for Alpha<RGBColor<u16, S>, u16> {
-    fn from(color: RGBColor<u16, S>) -> Self {
-        Alpha::new(color, u16::max_value())
-    }
-}
-
-impl<S> From<RGBColor<f32, S>> for Alpha<RGBColor<f32, S>, f32> {
-    fn from(color: RGBColor<f32, S>) -> Self {
-        Alpha::new(color, 1.0)
-    }
-}
-
-impl<T, C: From<(T, T, T)>, A: Channel> From<(T, T, T, A)> for Alpha<C, A> {
+impl<T: Channel, A: Channel, S> From<(T, T, T, A)> for Alpha<RGBColor<T, S>, A> {
     fn from(tuple: (T, T, T, A)) -> Self {
-        Alpha::new((tuple.0, tuple.1, tuple.2).into(), tuple.3)
+        Alpha::new(RGBColor::new(tuple.0, tuple.1, tuple.2), tuple.3)
     }
 }
 
-impl<T: Clone + Channel, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
+impl<T, A, S> From<&(T, T, T, A)> for Alpha<RGBColor<T, S>, A>
+    where T: Clone + Channel, A: Clone + Channel
+{
+    fn from(tuple: &(T, T, T, A)) -> Self {
+        let (r, g, b, a) = tuple;
+        Alpha::new(RGBColor::new(r.clone(), g.clone(), b.clone()), a.clone())
+    }
+}
+
+impl<T: Channel + Clone, S> From<[T; 4]> for Alpha<RGBColor<T, S>, T> {
     fn from(array: [T; 4]) -> Self {
-        Alpha::new(
-            [array[0].clone(), array[1].clone(), array[2].clone()].into(),
-            array[3].clone()
-        )
+        let f = |n: usize| array[n].clone();
+        Alpha::new(RGBColor::new(f(0), f(1), f(2)), f(3))
     }
 }
 
-impl<T: Clone + Channel, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
-    fn from(array: &[T; 4]) -> Self {
-        Alpha::new(
-            [array[0].clone(), array[1].clone(), array[2].clone()].into(),
-            array[3].clone()
-        )
+impl<T: Channel + Clone, S> From<&[T; 4]> for Alpha<RGBColor<T, S>, T> {
+    fn from(slice: &[T; 4]) -> Self {
+        let f = |n: usize| slice[n].clone();
+        Alpha::new(RGBColor::new(f(0), f(1), f(2)), f(3))
     }
 }
+
 impl<C: fmt::UpperHex> fmt::UpperHex for Alpha<C, u8> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:X}{:02X}", self.color, self.alpha)

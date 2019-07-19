@@ -115,10 +115,16 @@ impl<S> Color for HSVColor<S> {
     }
 }
 
-
 impl<S> From<(f32, f32, f32)> for HSVColor<S> {
     fn from(tuple: (f32, f32, f32)) -> Self {
         let (h, s, v) = tuple;
+        HSVColor::new(h, s, v)
+    }
+}
+
+impl<S> From<&(f32, f32, f32)> for HSVColor<S> {
+    fn from(tuple: &(f32, f32, f32)) -> Self {
+        let (h, s, v) = *tuple;
         HSVColor::new(h, s, v)
     }
 }
