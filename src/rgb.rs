@@ -7,7 +7,7 @@ use super::*;
 /// An RGB color
 ///
 /// `S` is this color's colorspace.
-#[derive(Debug, Default, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
     pub g: T,
@@ -23,17 +23,16 @@ impl<T, S> RGBColor<T, S> {
     /// Applies the given function to all color channels.
     #[inline]
     pub fn map<U, F: Fn(T) -> U>(self, fun: F) -> RGBColor<U, S> {
-        let (r, g, b) = self.into_tuple();
-        (fun(r), fun(g), fun(b)).into()
+        (fun(self.r), fun(self.g), fun(self.b)).into()
     }
 
     #[inline]
-    pub fn into_tuple(self) -> (T, T, T) {
+    pub fn tuple(self) -> (T, T, T) {
         (self.r, self.g, self.b)
     }
 
     #[inline]
-    pub fn into_array(self) -> [T; 3] {
+    pub fn array(self) -> [T; 3] {
         [self.r, self.g, self.b]
     }
 }
@@ -53,7 +52,7 @@ impl<T: Clone, S> RGBColor<T, S> {
 impl<S> RGBColor<u8, S> {
     /// Converts this channel into a floating point channel with range 0.0 - 1.0 .
     #[inline]
-    pub fn into_float(self) -> RGBColor<f32, S> {
+    pub fn float(self) -> RGBColor<f32, S> {
         self.map(|x| (x as f32 / 255.0).into())
     }
 
@@ -80,7 +79,7 @@ impl<S> RGBColor<u8, S> {
 impl<S> RGBColor<u16, S> {
     /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
     #[inline]
-    pub fn into_float(self) -> RGBColor<f32, S> {
+    pub fn float(self) -> RGBColor<f32, S> {
         self.map(|x| (x as f32 / u16::max_value() as f32).into())
     }
 }
@@ -88,13 +87,13 @@ impl<S> RGBColor<u16, S> {
 impl<S> RGBColor<f32, S> {
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
     #[inline]
-    pub fn quantizate_u8(self) -> RGBColor<u8, S> {
+    pub fn uint8(self) -> RGBColor<u8, S> {
         self.map(|x| (x * 255.0).round() as u8)
     }
 
     /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
     #[inline]
-    pub fn quantizate_u16(self) -> RGBColor<u16, S> {
+    pub fn uint16(self) -> RGBColor<u16, S> {
         self.map(|x| (x * u16::max_value() as f32).round() as u16)
     }
 
@@ -125,16 +124,16 @@ impl<S> RGBColor<f32, S> {
 impl RGBColor<f32, SRGBSpace> {
     /// Gamma decodes this color channel value into the linear color space
     #[inline]
-    pub fn decode(self) -> RGBColor<f32, LinearSpace> {
-        self.map(&std_gamma_decode).into_tuple().into()
+    pub fn std_decode(self) -> RGBColor<f32, LinearSpace> {
+        self.map(&std_gamma_decode).tuple().into()
     }
 }
 
 impl RGBColor<f32, LinearSpace> {
     /// Gamma encodes this color channel value into the sRGB color space
     #[inline]
-    pub fn encode(self) -> RGBColor<f32, SRGBSpace> {
-        self.map(&std_gamma_encode).into_tuple().into()
+    pub fn std_encode(self) -> RGBColor<f32, SRGBSpace> {
+        self.map(&std_gamma_encode).tuple().into()
     }
 
     /// Returns the relative luminance of this color between 0 and 1.
@@ -146,7 +145,7 @@ impl RGBColor<f32, LinearSpace> {
     /// `gamma_encode`.
     #[inline]
     pub fn relative_luminance(&self) -> f32 {
-        let (r, g, b) = self.into_tuple();
+        let (r, g, b) = self.tuple();
         0.2126*r + 0.7152*g + 0.0722*b
     }
 }
@@ -223,19 +222,6 @@ impl<T> Div<T> for RGBColor<T, LinearSpace>
         (self.r / rhs.clone(), self.g / rhs.clone(), self.b / rhs).into()
     }
 }
-
-impl<T: Clone, S> Clone for RGBColor<T, S> {
-    fn clone(&self) -> Self {
-        RGBColor {
-            r: self.r.clone(),
-            g: self.g.clone(),
-            b: self.b.clone(),
-            _space: PhantomData
-        }
-    }
-}
-
-impl<T: Copy, S> Copy for RGBColor<T, S> {}
 
 impl<S> fmt::Display for RGBColor<u8, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

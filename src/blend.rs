@@ -31,8 +31,8 @@ impl Blend<LinRGB48Color> for LinRGB48Color {
 
     #[inline]
     fn blend(&self, foreground: &Self, ratio: u16) -> Self {
-        self.into_float().blend(
-            &foreground.into_float(), ratio as f32 / u16::max_value() as f32
-        ).quantizate_u16()
+        self.float().blend(
+            &foreground.float(), ratio as f32 / u16::max_value() as f32
+        ).uint16()
     }
 }

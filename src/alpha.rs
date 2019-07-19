@@ -17,33 +17,17 @@ impl<C, A> Alpha<C, A> {
     pub fn new(color: C, alpha: A) -> Self {
         Alpha { color, alpha }
     }
-
-    pub fn into_tuple2(self) -> (C, A) {
-        (self.color, self.alpha)
-    }
 }
 
 impl<T, S, A> Alpha<RGBColor<T, S>, A> {
-    pub fn into_tuple4(self) -> (T, T, T, A) {
+    pub fn tuple(self) -> (T, T, T, A) {
         (self.color.r, self.color.g, self.color.b, self.alpha)
     }
 }
 
 impl<T, S> Alpha<RGBColor<T, S>, T> {
-    pub fn into_array4(self) -> [T; 4] {
+    pub fn array(self) -> [T; 4] {
         [self.color.r, self.color.g, self.color.b, self.alpha]
-    }
-}
-
-impl<S, A> Alpha<HSVColor<S>, A> {
-    pub fn into_tuple4(self) -> (f32, f32, f32, A) {
-        (self.color.h, self.color.s, self.color.v, self.alpha)
-    }
-}
-
-impl<S> Alpha<HSVColor<S>, f32> {
-    pub fn into_array4(self) -> [f32; 4] {
-        [self.color.h, self.color.s, self.color.v, self.alpha]
     }
 }
 

@@ -6,7 +6,7 @@ use super::*;
 /// An HSV color
 ///
 /// `S` is this color's colorspace
-#[derive(Debug, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
     pub h: f32,
     pub s: f32,
@@ -30,7 +30,7 @@ impl<S> HSVColor<S> {
     /// Otherwise the color itself is returned, with it's hue normalized to fit in the [0, 360)
     /// range.
     pub fn normalize(self) -> Self {
-        let (h, s, v) = self.into_tuple();
+        let (h, s, v) = self.tuple();
         if v == 0.0 { Self::default() }
         else if s == 0.0 {
             HSVColor::new(0.0, 0.0, v)
@@ -45,12 +45,12 @@ impl<S> HSVColor<S> {
     }
 
     #[inline]
-    pub fn into_tuple(self) -> (f32, f32, f32) {
+    pub fn tuple(self) -> (f32, f32, f32) {
         (self.h, self.s, self.v)
     }
 
     #[inline]
-    pub fn into_array(self) -> [f32; 3] {
+    pub fn array(self) -> [f32; 3] {
         [self.h, self.s, self.v]
     }
 
@@ -109,15 +109,6 @@ impl<S> From<&[f32; 3]> for HSVColor<S> {
         HSVColor::new(array[0], array[1], array[2])
     }
 }
-
-impl<S> Clone for HSVColor<S> {
-    fn clone(&self) -> Self {
-        let (h, s, v) = self.into_tuple();
-        HSVColor { h, s, v, _space: PhantomData }
-    }
-}
-
-impl<S> Copy for HSVColor<S> {}
 
 impl<S> Default for HSVColor<S> {
     fn default() -> Self {
