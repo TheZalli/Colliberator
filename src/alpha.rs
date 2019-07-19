@@ -49,6 +49,18 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
     }
 }
 
+impl<A> Alpha<SRGBColor, A> {
+    pub fn std_decode(self) -> Alpha<LinRGBColor, A> {
+        Alpha { color: self.color.std_decode(), alpha: self.alpha }
+    }
+}
+
+impl<A> Alpha<LinRGBColor, A> {
+    pub fn std_encode(self) -> Alpha<SRGBColor, A> {
+        Alpha { color: self.color.std_encode(), alpha: self.alpha }
+    }
+}
+
 impl<C: Default, A: Channel> Default for Alpha<C, A> {
     fn default() -> Self {
         Alpha::new(C::default(), A::ch_max())
