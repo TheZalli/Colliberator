@@ -1,6 +1,8 @@
 use std::fmt;
 
-use super::*;
+use num_traits::Float;
+
+use crate::*;
 
 /// A transparent color with an alpha channel
 ///
@@ -49,15 +51,24 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
     }
 }
 
-impl<A> Alpha<SRGBColor, A> {
-    pub fn std_decode(self) -> Alpha<LinRGBColor, A> {
+impl<T: Float + Channel, A> Alpha<RGBColor<T, SRGBSpace>, A> {
+    /// Gamma decodes this sRGBA color into the linear space
+    pub fn std_decode(self) -> Alpha<RGBColor<T, LinearSpace>, A> {
         Alpha { color: self.color.std_decode(), alpha: self.alpha }
     }
 }
 
-impl<A> Alpha<LinRGBColor, A> {
-    pub fn std_encode(self) -> Alpha<SRGBColor, A> {
+impl<T: Float + Channel, A> Alpha<RGBColor<T, LinearSpace>, A> {
+    /// Gamma encodes this linear alpha color into the sRGBA space
+    pub fn std_encode(self) -> Alpha<RGBColor<T, SRGBSpace>, A> {
         Alpha { color: self.color.std_encode(), alpha: self.alpha }
+    }
+}
+
+impl<T: Channel, A: Channel, S> Alpha<RGBColor<T, S>, A> {
+    /// Converts the channels of this alpha color into other channel types
+    pub fn conv<U: Channel, B: Channel>(self) -> Alpha<RGBColor<U, S>, B> {
+        Alpha { color: self.color.conv(), alpha: self.alpha.conv() }
     }
 }
 

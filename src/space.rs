@@ -1,5 +1,8 @@
 //! Colorspaces and conversions between them
 
+use num_traits::Float;
+use crate::cuw;
+
 /// The sRGB gamma value, used for sRGB decoding and encoding
 pub const STD_GAMMA: f32 = 2.4;
 
@@ -12,21 +15,21 @@ pub struct SRGBSpace;
 pub struct LinearSpace;
 
 /// Gamma encode a linear color channel into the sRGB space
-pub fn std_gamma_encode(linear: f32) -> f32 {
+pub fn std_gamma_encode<T: Float>(linear: T) -> T {
     const SRGB_CUTOFF: f32 = 0.0031308;
-    if linear <= SRGB_CUTOFF {
-        linear * 12.92
+    if linear <= cuw(SRGB_CUTOFF) {
+        linear * cuw(12.92)
     } else {
-        linear.powf(1.0/ STD_GAMMA) * 1.055 - 0.055
+        linear.powf(cuw(1.0 / STD_GAMMA)) * cuw(1.055) - cuw(0.055)
     }
 }
 
 /// Gamma decode an sRGB color channel into the linear space
-pub fn std_gamma_decode(encoded: f32) -> f32 {
+pub fn std_gamma_decode<T: Float>(encoded: T) -> T {
     const SRGB_INV_CUTOFF: f32 = 0.04045;
-    if encoded <= SRGB_INV_CUTOFF {
-        encoded / 12.92
+    if encoded <= cuw(SRGB_INV_CUTOFF) {
+        encoded / cuw(12.92)
     } else {
-        ((encoded + 0.055)/1.055).powf(STD_GAMMA)
+        ((encoded + cuw(0.055)) / cuw(1.055)).powf(cuw(STD_GAMMA))
     }
 }

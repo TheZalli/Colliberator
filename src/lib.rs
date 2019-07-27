@@ -11,6 +11,8 @@ pub mod space;
 
 use std::str;
 
+use num_traits::NumCast;
+
 pub use channel::*;
 pub use base::*;
 pub use self::alpha::*;
@@ -161,4 +163,10 @@ pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
         };
 
     fg + &format!("{}48;2;{};{};{}m{}{0}0m", CSI, r, g, b, text)
+}
+
+/// Converts numbers from one type to another with less writing
+#[inline]
+fn cuw<T: NumCast>(float: f32) -> T {
+    T::from(float).unwrap()
 }

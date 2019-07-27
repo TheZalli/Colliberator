@@ -2,6 +2,8 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::ops::{Add, Sub, Mul, Div};
 
+use num_traits::Float;
+
 use super::*;
 
 /// An RGB color
@@ -13,27 +15,6 @@ pub struct RGBColor<T, S> {
     pub g: T,
     pub b: T,
     _space: PhantomData<S>
-}
-
-impl<T: Channel, S> RGBColor<T, S>  {
-    /// Creates a new RGB-color with the given values
-    ///
-    /// They are clamped to the allowed color channel range
-    pub fn new(r: T, g: T, b: T) -> Self {
-        RGBColor { r, g, b, _space: PhantomData }.normalize()
-    }
-}
-
-impl<T: Channel, S> Color for RGBColor<T, S> {
-     #[inline]
-    fn normalize(self) -> Self {
-        self.map(Channel::to_range)
-    }
-
-    #[inline]
-    fn is_normal(&self) -> bool {
-        self.r.in_range() && self.g.in_range() && self.b.in_range()
-    }
 }
 
 impl<T, S> RGBColor<T, S> {
@@ -53,6 +34,33 @@ impl<T, S> RGBColor<T, S> {
     #[inline]
     pub fn array(self) -> [T; 3] {
         [self.r, self.g, self.b]
+    }
+}
+
+impl<T: Channel, S> RGBColor<T, S>  {
+    /// Creates a new RGB-color with the given values
+    ///
+    /// They are clamped to the allowed color channel range.
+    pub fn new(r: T, g: T, b: T) -> Self {
+        RGBColor { r, g, b, _space: PhantomData }.map(Channel::to_range)
+    }
+
+    /// Converts the channels of this color into another type
+    #[inline]
+    pub fn conv<U: Channel>(self) -> RGBColor<U, S> {
+        self.map(Channel::conv)
+    }
+}
+
+impl<T: Channel, S> Color for RGBColor<T, S> {
+     #[inline]
+    fn normalize(self) -> Self {
+        self.map(Channel::to_range)
+    }
+
+    #[inline]
+    fn is_normal(&self) -> bool {
+        self.r.in_range() && self.g.in_range() && self.b.in_range()
     }
 }
 
@@ -128,19 +136,19 @@ impl<S> RGBColor<f32, S> {
     }
 }
 
-impl RGBColor<f32, SRGBSpace> {
+impl<T: Float + Channel> RGBColor<T, SRGBSpace> {
     /// Gamma decodes this color channel value into the linear color space
     #[inline]
-    pub fn std_decode(self) -> RGBColor<f32, LinearSpace> {
-        self.map(&std_gamma_decode).tuple().into()
+    pub fn std_decode(self) -> RGBColor<T, LinearSpace> {
+        self.map(std_gamma_decode).tuple().into()
     }
 }
 
-impl RGBColor<f32, LinearSpace> {
+impl<T: Float + Channel> RGBColor<T, LinearSpace> {
     /// Gamma encodes this color channel value into the sRGB color space
     #[inline]
-    pub fn std_encode(self) -> RGBColor<f32, SRGBSpace> {
-        self.map(&std_gamma_encode).tuple().into()
+    pub fn std_encode(self) -> RGBColor<T, SRGBSpace> {
+        self.map(std_gamma_encode).tuple().into()
     }
 
     /// Returns the relative luminance of this color between 0 and 1.
@@ -151,15 +159,46 @@ impl RGBColor<f32, LinearSpace> {
     /// The returned values are linear, so to get perceptually uniform luminance, use
     /// `gamma_encode`.
     #[inline]
-    pub fn relative_luminance(&self) -> f32 {
+    pub fn relative_luminance(&self) -> T {
         let (r, g, b) = self.tuple();
-        0.2126*r + 0.7152*g + 0.0722*b
+        cuw::<T>(0.2126) * r + cuw::<T>(0.7152) * g + cuw::<T>(0.0722) * b
     }
 }
 
 impl<T: Channel, S> Default for RGBColor<T, S> {
     fn default() -> Self {
         RGBColor::new(T::ch_min(), T::ch_min(), T::ch_min())
+    }
+}
+
+impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
+    #[inline]
+    fn from(base_color: BaseColor) -> Self {
+        use crate::BaseColor::*;
+
+        let c0 = || T::ch_min();
+        let cm = || T::ch_mid();
+        let c1 = || T::ch_max();
+
+        let f = &RGBColor::new;
+        match base_color {
+            Black   => f(c0(), c0(), c0()),
+            Grey    => f(cm(), cm(), cm()),
+            White   => f(c1(), c1(), c1()),
+            Red     => f(c1(), c0(), c0()),
+            Yellow  => f(c1(), c1(), c0()),
+            Green   => f(c0(), c1(), c0()),
+            Cyan    => f(c0(), c1(), c1()),
+            Blue    => f(c0(), c0(), c1()),
+            Magenta => f(c1(), c0(), c1()),
+        }
+    }
+}
+
+impl<T: Channel> From<BaseColor> for RGBColor<T, LinearSpace> {
+    #[inline]
+    fn from(base_color: BaseColor) -> Self {
+        RGBColor::<f32, SRGBSpace>::from(base_color).std_decode().conv()
     }
 }
 
