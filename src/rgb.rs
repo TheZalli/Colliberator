@@ -9,7 +9,7 @@ use super::*;
 /// An RGB color
 ///
 /// `T` is the type of this color's channels, and `S` is this color's colorspace.
-#[derive(Debug, Clone, Copy, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
 pub struct RGBColor<T, S> {
     pub r: T,
     pub g: T,
@@ -170,6 +170,19 @@ impl<T: Channel, S> Default for RGBColor<T, S> {
         RGBColor::new(T::ch_min(), T::ch_min(), T::ch_min())
     }
 }
+
+impl<T: Clone, S> Clone for RGBColor<T, S> {
+    fn clone(&self) -> Self {
+        RGBColor {
+            r: self.r.clone(),
+            g: self.g.clone(),
+            b: self.b.clone(),
+            _space: PhantomData
+        }
+    }
+}
+
+impl<T: Copy, S> Copy for RGBColor<T, S> {}
 
 impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
     #[inline]

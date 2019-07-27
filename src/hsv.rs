@@ -3,10 +3,10 @@ use std::marker::PhantomData;
 
 use super::*;
 
-/// An HSV color
+/// A HSV color
 ///
-/// `T` is the type of this color's channels, and `S` is this color's colorspace.
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+/// `S` is this color's colorspace.
+#[derive(Debug, PartialOrd, PartialEq)]
 pub struct HSVColor<S> {
     pub h: f32,
     pub s: f32,
@@ -31,18 +31,6 @@ impl<S> HSVColor<S> {
     /// Deconstructs this color into an array of it's channels
     #[inline]
     pub fn array(self) -> [f32; 3] {
-        [self.h, self.s, self.v]
-    }
-
-    /// Creates a tuple of this color's channels from a reference
-    #[inline]
-    pub fn as_tuple(&self) -> (f32, f32, f32) {
-        (self.h, self.s, self.v)
-    }
-
-    /// Creates an array of this color's channels from a reference
-    #[inline]
-    pub fn as_array(&self) -> [f32; 3] {
         [self.h, self.s, self.v]
     }
 
@@ -97,7 +85,7 @@ impl<S> Color for HSVColor<S> {
     }
 
     fn is_normal(&self) -> bool {
-        let (h, s, v) = self.as_tuple();
+        let (h, s, v) = self.clone().tuple();
 
         if !s.is_normal() || !v.is_normal() {
             false
@@ -112,6 +100,33 @@ impl<S> Color for HSVColor<S> {
             if h == 0.0 { true }
             else { false }
         } else { true }
+    }
+}
+
+impl From<BaseColor> for HSVColor<SRGBSpace> {
+    #[inline]
+    fn from(base_color: BaseColor) -> Self {
+        use self::BaseColor::*;
+
+        let f = |h: f32, s: f32, v: f32| HSVColor::new(h.into(), s.into(), v.into());
+        match base_color {
+            Black   => f(  0.0, 0.0, 0.0),
+            Grey    => f(  0.0, 0.0, 0.5),
+            White   => f(  0.0, 0.0, 1.0),
+            Red     => f(  0.0, 1.0, 1.0),
+            Yellow  => f( 60.0, 1.0, 1.0),
+            Green   => f(120.0, 1.0, 1.0),
+            Cyan    => f(180.0, 1.0, 1.0),
+            Blue    => f(240.0, 1.0, 1.0),
+            Magenta => f(300.0, 1.0, 1.0),
+        }
+    }
+}
+
+impl From<BaseColor> for HSVColor<LinearSpace> {
+    #[inline]
+    fn from(base_color: BaseColor) -> Self {
+        RGBColor::<f32, LinearSpace>::from(base_color).hsv()
     }
 }
 
@@ -146,6 +161,14 @@ impl<S> Default for HSVColor<S> {
         HSVColor::new(0.0, 0.0, 0.0)
     }
 }
+
+impl<S> Clone for HSVColor<S> {
+    fn clone(&self) -> Self {
+        HSVColor { h: self.h, s: self.s, v: self.v, _space: PhantomData }
+    }
+}
+
+impl<S> Copy for HSVColor<S> {}
 
 impl<S> fmt::Display for HSVColor<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

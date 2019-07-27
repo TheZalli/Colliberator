@@ -92,7 +92,13 @@ impl<C, A> AsMut<C> for Alpha<C, A> {
 
 impl<T: Color, A: Channel> From<T> for Alpha<T, A> {
     fn from(color: T) -> Self {
-        Alpha::new(color, A::ch_max())
+        Alpha { color, alpha: A::ch_max() }
+    }
+}
+
+impl<T: From<BaseColor>, A: Channel> From<BaseColor> for Alpha<T, A> {
+    fn from(base_color: BaseColor) -> Self {
+        Alpha { color: base_color.into(), alpha: A::ch_max() }
     }
 }
 
