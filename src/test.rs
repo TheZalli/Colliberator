@@ -39,3 +39,22 @@ fn hex_conversion() {
         assert_eq!(hex_str, hex_str2);
     }
 }
+
+#[test]
+fn into_iterator() {
+    let c1 = SRGBAColor::new((0.25, 0.5, 1.0), 0.9);
+    let c2 = LinRGB48Color::new(255, 8, 240);
+    let mut i1 = c1.into_iter();
+    let mut i2 = c2.into_iter();
+
+    assert_eq!(i1.next(), Some(0.25));
+    assert_eq!(i1.next(), Some(0.5));
+    assert_eq!(i1.next(), Some(1.0));
+    assert_eq!(i1.next(), Some(0.9));
+    assert_eq!(i1.next(), None);
+
+    assert_eq!(i2.next(), Some(255));
+    assert_eq!(i2.next(), Some(8));
+    assert_eq!(i2.next(), Some(240));
+    assert_eq!(i2.next(), None);
+}

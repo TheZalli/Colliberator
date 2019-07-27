@@ -20,8 +20,8 @@ impl<C, A: Channel> Alpha<C, A> {
     ///
     /// This makes sure that the alpha-channel is in the proper range
     /// by calling `Channel::to_range`
-    pub fn new(color: C, alpha: A) -> Self {
-        Alpha { color, alpha: alpha.to_range() }
+    pub fn new<B: Into<C>>(color: B, alpha: A) -> Self {
+        Alpha { color: color.into(), alpha: alpha.to_range() }
     }
 }
 

@@ -4,6 +4,7 @@ mod alpha;
 mod rgb;
 mod hsv;
 mod blend;
+mod iter;
 
 pub mod space;
 
@@ -19,6 +20,7 @@ pub use self::alpha::*;
 pub use rgb::*;
 pub use hsv::*;
 pub use blend::*;
+pub use iter::*;
 
 use space::{LinearSpace, SRGBSpace, std_gamma_decode, std_gamma_encode};
 
