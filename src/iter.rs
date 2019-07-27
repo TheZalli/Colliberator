@@ -1,4 +1,4 @@
-use std::iter::IntoIterator;
+use std::iter::{IntoIterator, ExactSizeIterator, FusedIterator};
 use std::mem;
 
 use crate::{Alpha, RGBColor, HSVColor};
@@ -27,13 +27,22 @@ impl<T> IntoIter<T> {
 
 impl<T: Clone> Iterator for IntoIter<T> {
     type Item = T;
+
     fn next(&mut self) -> Option<Self::Item> {
         if self.idx == 4 { return None; }
         let output = self.array[self.idx as usize].clone();
         self.idx += 1;
         Some(output)
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let x = (4 - self.idx) as usize;
+        (x, Some(x))
+    }
 }
+
+impl<T: Clone> ExactSizeIterator for IntoIter<T> {}
+impl<T: Clone> FusedIterator for IntoIter<T> {}
 
 impl<T: Clone, S> IntoIterator for RGBColor<T, S> {
     type Item = T;
