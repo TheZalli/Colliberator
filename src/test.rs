@@ -4,7 +4,7 @@ use super::*;
 fn rgb_to_hsv() {
     let rgb = SRGB24Color::new(128, 255, 55);
     let hsv = rgb.float().hsv().normalize();
-    let rgb2 = hsv.rgb().uint8();
+    let rgb2 = hsv.rgb().conv();
 
     assert_eq!(rgb, rgb2);
 }
@@ -13,7 +13,7 @@ fn rgb_to_hsv() {
 fn srgb_to_linear() {
     let srgb = SRGB24Color::new(128, 255, 55);
     let lin_rgb = srgb.float().std_decode();
-    let srgb2 = lin_rgb.std_encode().uint8();
+    let srgb2 = lin_rgb.std_encode().conv();
 
     assert_eq!(srgb, srgb2)
 }
@@ -22,7 +22,7 @@ fn srgb_to_linear() {
 fn srgb_to_linear_to_hsv() {
     let srgb = SRGB24Color::new(128, 255, 55);
     let lin_hsv = srgb.float().std_decode().hsv().normalize();
-    let srgb2 = lin_hsv.rgb().std_encode().uint8();
+    let srgb2 = lin_hsv.rgb().std_encode().conv();
 
     assert_eq!(srgb, srgb2)
 }

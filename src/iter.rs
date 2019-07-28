@@ -3,9 +3,11 @@ use std::mem;
 
 use crate::{Alpha, RGBColor, HSVColor};
 
+const ARRAY_MAX_LEN: u8 = 4;
+
 /// An iterator to a color's channels
 pub struct IntoIter<T> {
-    array: [T; 4],
+    array: [T; ARRAY_MAX_LEN as usize],
     idx: u8,
 }
 
@@ -29,14 +31,14 @@ impl<T: Clone> Iterator for IntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx == 4 { return None; }
+        if self.idx == ARRAY_MAX_LEN { return None; }
         let output = self.array[self.idx as usize].clone();
         self.idx += 1;
         Some(output)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let x = (4 - self.idx) as usize;
+        let x = (ARRAY_MAX_LEN - self.idx) as usize;
         (x, Some(x))
     }
 }

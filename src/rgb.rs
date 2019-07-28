@@ -100,18 +100,6 @@ impl<S> RGBColor<u16, S> {
 }
 
 impl<S> RGBColor<f32, S> {
-    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 255.
-    #[inline]
-    pub fn uint8(self) -> RGBColor<u8, S> {
-        self.map(|x| (x * 255.0).round() as u8)
-    }
-
-    /// Quantizates this value from the range 0.0 - 1.0 into range 0 - 65535.
-    #[inline]
-    pub fn uint16(self) -> RGBColor<u16, S> {
-        self.map(|x| (x * u16::max_value() as f32).round() as u16)
-    }
-
     pub fn hsv(self) -> HSVColor<S> {
         let (r, g, b) = self.tuple();
 

@@ -34,6 +34,6 @@ impl Blend<LinRGB48Color> for LinRGB48Color {
     fn blend(&self, foreground: &Self, ratio: u16) -> Self {
         self.float().blend(
             &foreground.float(), ratio as f32 / u16::max_value() as f32
-        ).uint16()
+        ).conv()
     }
 }
