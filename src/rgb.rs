@@ -149,13 +149,13 @@ impl<T: Float + Channel> RGBColor<T, LinearSpace> {
     #[inline]
     pub fn relative_luminance(&self) -> T {
         let (r, g, b) = self.tuple();
-        cuw::<T>(0.2126) * r + cuw::<T>(0.7152) * g + cuw::<T>(0.0722) * b
+        cuwf::<T>(0.2126) * r + cuwf::<T>(0.7152) * g + cuwf::<T>(0.0722) * b
     }
 }
 
 impl<T: Channel, S> Default for RGBColor<T, S> {
     fn default() -> Self {
-        RGBColor::new(T::ch_min(), T::ch_min(), T::ch_min())
+        RGBColor::new(T::ch_zero(), T::ch_zero(), T::ch_zero())
     }
 }
 
@@ -177,7 +177,7 @@ impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
     fn from(base_color: BaseColor) -> Self {
         use crate::BaseColor::*;
 
-        let c0 = || T::ch_min();
+        let c0 = || T::ch_zero();
         let cm = || T::ch_mid();
         let c1 = || T::ch_max();
 
