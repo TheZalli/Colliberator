@@ -22,6 +22,7 @@ pub use hsv::*;
 pub use blend::*;
 pub use iter::*;
 
+use angle::*;
 use space::{LinearSpace, SRGBSpace, std_gamma_decode, std_gamma_encode};
 
 /// A trait for colors
@@ -94,6 +95,8 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
     let mut shades = Vec::with_capacity(3);
 
     let (h, s, _) = color.hsv().tuple();
+    let h = h.conv::<AngleDeg<f32>>().0;
+    let s = s.conv::<f32>();
 
     let lum: f32 = color.std_decode().relative_luminance().into();
 
@@ -172,3 +175,6 @@ fn cuw<T: NumCast, U: NumCast>(n: T) -> U { U::from(n).unwrap() }
 
 #[inline]
 fn cuwf<T: NumCast>(float: f32) -> T { T::from(float).unwrap() }
+
+#[inline]
+fn cuwtf<T: NumCast>(n: T) -> f32 { n.to_f32().unwrap() }

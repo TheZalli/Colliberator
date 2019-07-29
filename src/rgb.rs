@@ -4,7 +4,7 @@ use std::ops::{Add, Sub, Mul, Div};
 
 use num_traits::Float;
 
-use super::*;
+use crate::*;
 
 /// An RGB color
 ///
@@ -100,7 +100,7 @@ impl<S> RGBColor<u16, S> {
 }
 
 impl<S> RGBColor<f32, S> {
-    pub fn hsv(self) -> HSVColor<S> {
+    pub fn hsv(self) -> HSVColor<AngleDeg<f32>, f32, S> {
         let (r, g, b) = self.tuple();
 
         let max = r.max(g).max(b);
@@ -109,7 +109,7 @@ impl<S> RGBColor<f32, S> {
 
         let value = max;
         let saturation = if max == 0.0 { 0.0 } else { delta / max };
-        let hue = 60.0 *
+        let hue = AngleDeg ( 60.0 *
             if delta == 0.0 {
                 0.0
             } else if max == r {
@@ -118,7 +118,7 @@ impl<S> RGBColor<f32, S> {
                 (b - r) / delta + 2.0
             } else {
                 (r - g) / delta + 4.0
-            };
+            });
 
         HSVColor::new(hue, saturation, value)
     }
@@ -206,6 +206,13 @@ impl<T: Channel> From<BaseColor> for RGBColor<T, LinearSpace> {
 impl<T: Channel, S> From<(T, T, T)> for RGBColor<T, S> {
     fn from(tuple: (T, T, T)) -> Self {
         let (r, g, b) = tuple;
+        RGBColor::new(r, g, b)
+    }
+}
+
+impl<T: Clone + Channel, S> From<&(T, T, T)> for RGBColor<T, S> {
+    fn from(tuple: &(T, T, T)) -> Self {
+        let (r, g, b) = tuple.clone();
         RGBColor::new(r, g, b)
     }
 }

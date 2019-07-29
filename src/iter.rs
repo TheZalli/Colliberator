@@ -1,7 +1,7 @@
 use std::iter::{IntoIterator, ExactSizeIterator, FusedIterator};
 use std::mem;
 
-use crate::{Alpha, RGBColor, HSVColor};
+use crate::{Alpha, RGBColor};
 
 const ARRAY_MAX_LEN: u8 = 4;
 
@@ -54,26 +54,10 @@ impl<T: Clone, S> IntoIterator for RGBColor<T, S> {
     }
 }
 
-impl<S> IntoIterator for HSVColor<S> {
-    type Item = f32;
-    type IntoIter = IntoIter<f32>;
-    fn into_iter(self) -> Self::IntoIter {
-        IntoIter::from3(self.h, self.s, self.v)
-    }
-}
-
 impl<T: Clone, S> IntoIterator for Alpha<RGBColor<T, S>, T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
     fn into_iter(self) -> Self::IntoIter {
         IntoIter::from4(self.color.r, self.color.g, self.color.b, self.alpha)
-    }
-}
-
-impl<S> IntoIterator for Alpha<HSVColor<S>, f32> {
-    type Item = f32;
-    type IntoIter = IntoIter<f32>;
-    fn into_iter(self) -> Self::IntoIter {
-        IntoIter::from4(self.color.h, self.color.s, self.color.v, self.alpha)
     }
 }

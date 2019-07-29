@@ -1,21 +1,23 @@
-use num_traits::{NumCast, Num};
+pub mod angle;
 
-use crate::{cuw, cuwf};
+use num_traits::NumCast;
+
+use crate::{cuwf, cuwtf};
 
 /// A trait for color channels
-pub trait Channel: Sized + PartialOrd + NumCast + Num {
+pub trait Channel: Sized + PartialOrd + NumCast {
     /// The maximum value for this channel, inclusive
     ///
     /// with integers it's usually the max value, with floats it's one.
     fn ch_max() -> Self;
 
-    /// The zero value for this channel
-    fn ch_zero() -> Self;
-
     /// The middle value for this channel
     ///
     /// Half of `ch_max`
     fn ch_mid() -> Self;
+
+    /// The zero value for this channel
+    fn ch_zero() -> Self;
 
     /// Takes this channel value and converts it into any other channel type
     ///
@@ -27,10 +29,10 @@ pub trait Channel: Sized + PartialOrd + NumCast + Num {
     /// this method, because this assumes the conversion can't fail.
     fn conv<T: Channel>(self) -> T {
         cuwf((
-            cuw::<_, f32>(self.to_range()) /
-            cuw::<_, f32>(Self::ch_max()) *
-            cuw::<_, f32>(T::ch_max())
-        ).round())
+            cuwtf(self.to_range()) /
+            cuwtf(Self::ch_max()) *
+            cuwtf(T::ch_max())
+        ).round()) // TODO
     }
 
     /// Return whether this value is inside the channel's allowed range
@@ -58,35 +60,8 @@ macro_rules! impl_uint_channels {
 
 impl_uint_channels!(u8, u16, u32);
 
-impl Channel for u64 {
-    fn ch_max() -> Self { u64::max_value() }
-    fn ch_mid() -> Self { u64::max_value() / 2 }
-    fn ch_zero() -> Self { 0 }
-
-    fn conv<T: Channel>(self) -> T {
-        cuw::<_, T>((
-            self.to_range() as f64 /
-            Self::ch_max() as f64 *
-            cuw::<_, f64>(T::ch_max())
-        ).round())
-    }
-}
-
 impl Channel for f32 {
     fn ch_max() -> Self { 1.0 }
     fn ch_mid() -> Self { 0.5 }
     fn ch_zero() -> Self { 0.0 }
-}
-
-impl Channel for f64 {
-    fn ch_max() -> Self { 1.0 }
-    fn ch_mid() -> Self { 0.5 }
-    fn ch_zero() -> Self { 0.0 }
-
-    fn conv<T: Channel>(self) -> T {
-        cuw::<_, T>((
-            self.to_range() / Self::ch_max() *
-            cuw::<_, f64>(T::ch_max())
-        ).round())
-    }
 }
