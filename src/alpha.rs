@@ -114,32 +114,29 @@ impl<T: From<BaseColor>, A: Channel> From<BaseColor> for Alpha<T, A> {
     }
 }
 
-impl<T: Channel, A: Channel, S> From<(T, T, T, A)> for Alpha<RGBColor<T, S>, A> {
+impl<T, C: From<(T, T, T)>, A: Channel> From<(T, T, T, A)> for Alpha<C, A> {
     fn from(tuple: (T, T, T, A)) -> Self {
-        Alpha::new(RGBColor::new(tuple.0, tuple.1, tuple.2), tuple.3)
+        Alpha::new((tuple.0, tuple.1, tuple.2), tuple.3)
     }
 }
 
-impl<T, A, S> From<&(T, T, T, A)> for Alpha<RGBColor<T, S>, A>
-    where T: Clone + Channel, A: Clone + Channel
-{
+impl<T: Clone, C: From<(T, T, T)>, A: Channel + Clone> From<&(T, T, T, A)> for Alpha<C, A> {
     fn from(tuple: &(T, T, T, A)) -> Self {
-        let (r, g, b, a) = tuple;
-        Alpha::new(RGBColor::new(r.clone(), g.clone(), b.clone()), a.clone())
+        tuple.clone().into()
     }
 }
 
-impl<T: Channel + Clone, S> From<[T; 4]> for Alpha<RGBColor<T, S>, T> {
+impl<T: Channel + Clone, C: From<[T; 3]>> From<[T; 4]> for Alpha<C, T> {
     fn from(array: [T; 4]) -> Self {
         let f = |n: usize| array[n].clone();
-        Alpha::new(RGBColor::new(f(0), f(1), f(2)), f(3))
+        Alpha::new([f(0), f(1), f(2)], f(3))
     }
 }
 
-impl<T: Channel + Clone, S> From<&[T; 4]> for Alpha<RGBColor<T, S>, T> {
+impl<T: Channel + Clone, C: From<[T; 3]>> From<&[T; 4]> for Alpha<C, T> {
     fn from(slice: &[T; 4]) -> Self {
         let f = |n: usize| slice[n].clone();
-        Alpha::new(RGBColor::new(f(0), f(1), f(2)), f(3))
+        Alpha::new([f(0), f(1), f(2)], f(3))
     }
 }
 
