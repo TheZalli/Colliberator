@@ -12,13 +12,13 @@ use crate::{cuw, Channel};
 
 /// A wrapper type for angles in degrees
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
-pub struct AngleDeg<T>(pub T);
+pub struct Deg<T>(pub T);
 
 /// A wrapper type for angles in radians
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
-pub struct AngleRad(pub f32);
+pub struct Rad(pub f32);
 
-impl Channel for AngleDeg<f32> {
+impl Channel for Deg<f32> {
     const INTEGER: bool = false;
 
     fn ch_max() -> Self { Self(360.0) }
@@ -37,7 +37,7 @@ impl Channel for AngleDeg<f32> {
 
 macro_rules! impl_int_deg_channel {
     ( $( $type:ty ),* ) => { $(
-        impl Channel for AngleDeg<$type> {
+        impl Channel for Deg<$type> {
             const INTEGER: bool = true;
 
             fn ch_max() -> Self { Self(360) }
@@ -58,12 +58,12 @@ macro_rules! impl_int_deg_channel {
 
 impl_int_deg_channel!(i16, i32);
 
-impl Channel for AngleRad {
+impl Channel for Rad {
     const INTEGER: bool = false;
 
-    fn ch_max() -> Self { AngleRad(PI32 * 2.0) }
-    fn ch_mid() -> Self { AngleRad(PI32) }
-    fn ch_zero() -> Self { AngleRad(0.0) }
+    fn ch_max() -> Self { Rad(PI32 * 2.0) }
+    fn ch_mid() -> Self { Rad(PI32) }
+    fn ch_zero() -> Self { Rad(0.0) }
 
     fn to_range(self) -> Self {
         let a = self.0 % Self::ch_max().0;
@@ -75,13 +75,13 @@ impl Channel for AngleRad {
     }
 }
 
-impl<T: NumCast> NumCast for AngleDeg<T> {
+impl<T: NumCast> NumCast for Deg<T> {
     fn from<U: ToPrimitive>(n: U) -> Option<Self> {
         T::from(n).map(Self)
     }
 }
 
-impl NumCast for AngleRad {
+impl NumCast for Rad {
     fn from<T: ToPrimitive>(n: T) -> Option<Self> {
         n.to_f32().map(Self)
     }
@@ -108,11 +108,11 @@ macro_rules! impl_to_prim_fns {
     );
 }
 
-impl<T: ToPrimitive> ToPrimitive for AngleDeg<T> {
+impl<T: ToPrimitive> ToPrimitive for Deg<T> {
     impl_to_prim_fns!();
 }
 
-impl ToPrimitive for AngleRad {
+impl ToPrimitive for Rad {
     impl_to_prim_fns!();
 }
 
@@ -128,14 +128,14 @@ macro_rules! generic_newtype_from_impls {
     )* };
 }
 
-generic_newtype_from_impls!(AngleDeg, i16, i32, f32);
+generic_newtype_from_impls!(Deg, i16, i32, f32);
 
-impl From<f32> for AngleRad {
+impl From<f32> for Rad {
     fn from(n: f32) -> Self { Self(n) }
 }
 
-impl From<AngleRad> for f32 {
-    fn from(angle: AngleRad) -> Self { angle.0 }
+impl From<Rad> for f32 {
+    fn from(angle: Rad) -> Self { angle.0 }
 }
 
 macro_rules! impl_deg_ops {
@@ -184,7 +184,7 @@ macro_rules! impl_rad_ops {
     )* };
 }
 
-impl_deg_ops!(AngleDeg;
+impl_deg_ops!(Deg;
     Add, add, AddAssign, add_assign;
     Sub, sub, SubAssign, sub_assign;
     Mul, mul, MulAssign, mul_assign;
@@ -192,7 +192,7 @@ impl_deg_ops!(AngleDeg;
     Rem, rem, RemAssign, rem_assign
 );
 
-impl_rad_ops!(AngleRad;
+impl_rad_ops!(Rad;
     Add, add, AddAssign, add_assign;
     Sub, sub, SubAssign, sub_assign;
     Mul, mul, MulAssign, mul_assign;

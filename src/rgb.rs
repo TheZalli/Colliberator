@@ -86,7 +86,7 @@ impl<S> RGBColor<u8, S> {
 }
 
 impl<S> RGBColor<f32, S> {
-    pub fn hsv(self) -> HSVColor<AngleDeg<f32>, f32, S> {
+    pub fn hsv(self) -> HSVColor<Deg<f32>, f32, S> {
         let (r, g, b) = self.tuple();
 
         let max = r.max(g).max(b);
@@ -95,7 +95,7 @@ impl<S> RGBColor<f32, S> {
 
         let value = max;
         let saturation = if max == 0.0 { 0.0 } else { delta / max };
-        let hue = AngleDeg ( 60.0 *
+        let hue = Deg ( 60.0 *
             if delta == 0.0 {
                 0.0
             } else if max == r {

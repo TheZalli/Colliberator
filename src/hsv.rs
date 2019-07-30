@@ -47,7 +47,7 @@ impl<H: Channel, T: Channel, S> HSVColor<H, T, S> {
     ///
     /// This should be done to a normalized HSV color.
     pub fn rgb(self) -> RGBColor<T, S> {
-        let h = cuwtf(self.h.conv::<AngleDeg<f32>>()) / 60.0;
+        let h = cuwtf(self.h.conv::<Deg<f32>>()) / 60.0;
         let (s, v) = (cuwtf(self.s), cuwtf(self.v));
 
         // largest, second largest and the smallest component
@@ -132,7 +132,7 @@ impl<H: Channel, T: Channel> From<BaseColor> for HSVColor<H, T, SRGBSpace>
         use self::BaseColor::*;
 
         let f = |h: f32, s: f32, v: f32|
-            Self::new(AngleDeg(h).conv::<H>(), s.conv(), v.conv());
+            Self::new(Deg(h).conv::<H>(), s.conv(), v.conv());
 
         match base_color {
             Black   => f(  0.0, 0.0, 0.0),

@@ -64,12 +64,12 @@ fn angle_conversion() {
     use std::f32::consts::PI;
     for i in 0..=999 {
         let f = (i as f32) / 1000.0;
-        let deg: AngleDeg<f32> = f.conv();
-        let rad: AngleRad = f.conv();
+        let deg: Deg<f32> = f.conv();
+        let rad: Rad = f.conv();
 
         assert_eq!(deg.0, f * 360.0);
         assert_eq!(rad.0, f * 2.0 * PI);
-        assert_eq!(deg.0.round(), rad.conv::<AngleDeg<f32>>().0.round());
+        assert_eq!(deg.0.round(), rad.conv::<Deg<f32>>().0.round());
     }
 }
 
@@ -86,11 +86,11 @@ fn normalization() {
     let hsv7 = StdHSVColor::from([45.0, 0.0, 0.0]);
 
     assert_eq!(rgba.tuple(), (1.0, 0.0, 0.0, 1.0));
-    assert_eq!(hsv1.tuple(), (AngleDeg(270.0), 1.0, 0.0));
-    assert_eq!(hsv2.tuple(), (AngleDeg(40.0), 1.0, 0.0));
-    assert_eq!(hsv3.tuple(), (AngleDeg(0.0), 0.0, 0.5));
-    assert_eq!(hsv4.tuple(), (AngleDeg(0.0), 0.9, 0.2));
-    assert_eq!(hsv5.tuple(), (AngleDeg(0.0), 0.0, 0.0));
+    assert_eq!(hsv1.tuple(), (Deg(270.0), 1.0, 0.0));
+    assert_eq!(hsv2.tuple(), (Deg(40.0), 1.0, 0.0));
+    assert_eq!(hsv3.tuple(), (Deg(0.0), 0.0, 0.5));
+    assert_eq!(hsv4.tuple(), (Deg(0.0), 0.9, 0.2));
+    assert_eq!(hsv5.tuple(), (Deg(0.0), 0.0, 0.0));
     assert_eq!(hsv6.array::<f32>(), [0.0, 0.0, 0.8]);
     assert_eq!(hsv7.tuple(), (0.0.into(), 0.0, 0.0));
 }

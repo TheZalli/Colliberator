@@ -62,11 +62,11 @@ pub type LinRGBA64Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 /// A 128-bit HSV color in sRGB colorspace with 32-bit floating point channels
 ///
 /// The hue channel is in degrees in the range [0, 360).
-pub type StdHSVColor = HSVColor<AngleDeg<f32>, f32, SRGBSpace>;
+pub type StdHSVColor = HSVColor<Deg<f32>, f32, SRGBSpace>;
 /// A 128-bit HSV color in linear colorspace with 32-bit floating point channels
 ///
 /// The hue channel is in degrees in the range [0, 360).
-pub type LinHSVColor = HSVColor<AngleDeg<f32>, f32, LinearSpace>;
+pub type LinHSVColor = HSVColor<Deg<f32>, f32, LinearSpace>;
 
 /// Classify this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
@@ -104,7 +104,7 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
     let mut shades = Vec::with_capacity(3);
 
     let (h, s, _) = color.hsv().tuple();
-    let h = h.conv::<AngleDeg<f32>>().0;
+    let h = h.conv::<Deg<f32>>().0;
     let s = s.conv::<f32>();
 
     let lum: f32 = color.std_decode().relative_luminance().into();
