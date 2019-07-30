@@ -103,9 +103,8 @@ pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
 
     let mut shades = Vec::with_capacity(3);
 
-    let (h, s, _) = color.hsv().tuple();
-    let h = h.conv::<Deg<f32>>().0;
-    let s = s.conv::<f32>();
+    let (h, s, _) = color.hsv::<Deg<f32>>().tuple();
+    let h = h.0;
 
     let lum: f32 = color.std_decode().relative_luminance().into();
 

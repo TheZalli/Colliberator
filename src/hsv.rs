@@ -77,9 +77,7 @@ impl<H: Channel, T: Channel, S> HSVColor<H, T, S> {
     }
 }
 
-impl<H: Channel, T: Channel, S> Color for HSVColor<H, T, S>
-    where Self: Clone
-{
+impl<H: Channel, T: Channel, S> Color for HSVColor<H, T, S> {
     /// Normalize the color's values by normalizing the hue and zeroing the unnecessary channels
     ///
     /// If value channel is zero, black is returned.
@@ -107,18 +105,18 @@ impl<H: Channel, T: Channel, S> Color for HSVColor<H, T, S>
     }
 
     fn is_normal(&self) -> bool {
-        let (h, s, v) = self.clone().tuple();
+        let (h, s, v) = (&self.h, &self.s, &self.v);
         let (h0, t0) = (H::ch_zero(), T::ch_zero());
 
         if !h.in_range() || !s.in_range() || !v.in_range() {
             false
-        } else if v == t0 {
+        } else if *v == t0 {
             // color black
-            if h == h0 && s == t0 { true }
+            if *h == h0 && *s == t0 { true }
             else { false }
-        } else if s == t0 {
+        } else if *s == t0 {
             // a grey color
-            if h == h0 { true }
+            if *h == h0 { true }
             else { false }
         } else { true }
     }
@@ -151,7 +149,7 @@ impl<H: Channel, T: Channel> From<BaseColor> for HSVColor<H, T, SRGBSpace>
 impl<H: Channel, T: Channel> From<BaseColor> for HSVColor<H, T, LinearSpace> {
     #[inline]
     fn from(base_color: BaseColor) -> Self {
-        RGBColor::<f32, LinearSpace>::from(base_color).hsv().conv()
+        RGBColor::<f32, LinearSpace>::from(base_color).hsv::<H>().conv()
     }
 }
 

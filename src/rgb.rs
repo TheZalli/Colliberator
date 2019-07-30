@@ -85,9 +85,9 @@ impl<S> RGBColor<u8, S> {
     }
 }
 
-impl<S> RGBColor<f32, S> {
-    pub fn hsv(self) -> HSVColor<Deg<f32>, f32, S> {
-        let (r, g, b) = self.tuple();
+impl<T: Channel, S> RGBColor<T, S> {
+    pub fn hsv<H: Channel>(self) -> HSVColor<H, T, S> {
+        let (r, g, b) = self.map(Channel::conv::<f32>).tuple();
 
         let max = r.max(g).max(b);
         let min = r.min(g).min(b);
@@ -106,7 +106,7 @@ impl<S> RGBColor<f32, S> {
                 (r - g) / delta + 4.0
             });
 
-        HSVColor::new(hue, saturation, value)
+        HSVColor::new(hue.conv::<H>(), saturation.conv(), value.conv())
     }
 }
 

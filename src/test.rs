@@ -3,7 +3,7 @@ use crate::*;
 #[test]
 fn rgb_to_hsv() {
     let rgb = SRGB24Color::new(128, 255, 55);
-    let hsv = rgb.conv::<f32>().hsv().normalize();
+    let hsv = rgb.conv::<f32>().hsv::<Deg<f32>>().normalize();
     let rgb2 = hsv.rgb().conv();
 
     assert_eq!(rgb, rgb2);
@@ -21,7 +21,7 @@ fn srgb_to_linear() {
 #[test]
 fn srgb_to_linear_to_hsv() {
     let srgb = SRGB24Color::new(128, 255, 55);
-    let lin_hsv = srgb.conv::<f32>().std_decode().hsv().normalize();
+    let lin_hsv = srgb.conv::<f32>().std_decode().hsv::<Deg<f32>>().normalize();
     let srgb2 = lin_hsv.rgb().std_encode().conv();
 
     assert_eq!(srgb, srgb2)

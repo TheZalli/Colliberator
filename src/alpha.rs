@@ -51,6 +51,18 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
     }
 }
 
+impl<T: Channel, A, S> Alpha<RGBColor<T, S>, A> {
+    pub fn hsv<H: Channel>(self) -> Alpha<HSVColor<H, T, S>, A> {
+        Alpha { color: self.color.hsv(), alpha: self.alpha }
+    }
+}
+
+impl<H: Channel, T: Channel, A, S> Alpha<HSVColor<H, T, S>, A> {
+    pub fn rgb(self) -> Alpha<RGBColor<T, S>, A> {
+        Alpha { color: self.color.rgb(), alpha: self.alpha }
+    }
+}
+
 impl<T: Float + Channel, A> Alpha<RGBColor<T, SRGBSpace>, A> {
     /// Gamma decodes this sRGBA color into the linear space
     pub fn std_decode(self) -> Alpha<RGBColor<T, LinearSpace>, A> {
