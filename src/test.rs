@@ -1,9 +1,9 @@
-use super::*;
+use crate::*;
 
 #[test]
 fn rgb_to_hsv() {
     let rgb = SRGB24Color::new(128, 255, 55);
-    let hsv = rgb.float().hsv().normalize();
+    let hsv = rgb.conv::<f32>().hsv().normalize();
     let rgb2 = hsv.rgb().conv();
 
     assert_eq!(rgb, rgb2);
@@ -12,7 +12,7 @@ fn rgb_to_hsv() {
 #[test]
 fn srgb_to_linear() {
     let srgb = SRGB24Color::new(128, 255, 55);
-    let lin_rgb = srgb.float().std_decode();
+    let lin_rgb = srgb.conv::<f32>().std_decode();
     let srgb2 = lin_rgb.std_encode().conv();
 
     assert_eq!(srgb, srgb2)
@@ -21,7 +21,7 @@ fn srgb_to_linear() {
 #[test]
 fn srgb_to_linear_to_hsv() {
     let srgb = SRGB24Color::new(128, 255, 55);
-    let lin_hsv = srgb.float().std_decode().hsv().normalize();
+    let lin_hsv = srgb.conv::<f32>().std_decode().hsv().normalize();
     let srgb2 = lin_hsv.rgb().std_encode().conv();
 
     assert_eq!(srgb, srgb2)
@@ -57,4 +57,36 @@ fn into_iterator() {
     assert_eq!(i2.next(), Some(8));
     assert_eq!(i2.next(), Some(240));
     assert_eq!(i2.next(), None);
+}
+
+#[test]
+fn angle_conversion() {
+    use std::f32::consts::PI;
+    for i in 0..=999 {
+        let f = (i as f32) / 1000.0;
+        let deg: AngleDeg<f32> = f.conv();
+        let rad: AngleRad = f.conv();
+
+        assert_eq!(deg.0, f * 360.0);
+        assert_eq!(rad.0, f * 2.0 * PI);
+        assert_eq!(deg.0.round(), rad.conv::<AngleDeg<f32>>().0.round());
+    }
+}
+
+#[test]
+fn normalization() {
+    use std::f32::{INFINITY, NEG_INFINITY};
+    let rgba = SRGBAColor::new((2.0, -10.0, NEG_INFINITY), INFINITY);
+    let hsv1 = StdHSVColor::new(-90.0, 2.0, -5.0);
+    let hsv2 = StdHSVColor::new(0.6, 0.0, 0.5);
+    let hsv3 = StdHSVColor::new(0.0, 0.9, 0.2);
+    let hsv4 = StdHSVColor::new(0.5, 0.25, 0.0);
+    let hsv5 = StdHSVColor::new(0.0, 0.0, 0.8);
+
+    assert_eq!(rgba.tuple(), (1.0, 0.0, 0.0, 1.0));
+    assert_eq!(hsv1.tuple(), (AngleDeg(-90.0 + 360.0), 1.0, 0.0));
+    assert_eq!(hsv2.tuple(), (AngleDeg(0.0), 0.0, 0.5));
+    assert_eq!(hsv3.tuple(), (AngleDeg(0.0), 0.9, 0.2));
+    assert_eq!(hsv4.tuple(), (AngleDeg(0.0), 0.0, 0.0));
+    assert_eq!(hsv5.tuple(), (AngleDeg(0.0), 0.0, 0.8));
 }

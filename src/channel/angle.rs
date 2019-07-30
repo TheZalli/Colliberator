@@ -6,27 +6,27 @@
 use std::ops::*;
 use std::f32::consts::PI as PI32;
 
-use num_traits::{ToPrimitive, NumCast};
+use num_traits::{ToPrimitive, NumCast, NumOps};
 
 use crate::{cuw, Channel};
 
 /// A wrapper type for angles in degrees
-#[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
 pub struct AngleDeg<T>(pub T);
 
 /// A wrapper type for angles in radians
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct AngleRad(pub f32);
 
-impl Channel for AngleDeg<f32> {
+impl<T: NumCast + NumOps + PartialOrd> Channel for AngleDeg<T> {
     fn ch_max() -> Self { AngleDeg(cuw(360)) }
     fn ch_mid() -> Self { AngleDeg(cuw(180)) }
     fn ch_zero() -> Self { AngleDeg(cuw(0)) }
 
     fn to_range(self) -> Self {
-        let a: f32 = self.0 % 360.0;
-        if a < 0.0 {
-            Self(a + 360.0)
+        let a: T = self.0 % cuw(360);
+        if a < cuw(0.0) {
+            Self(a + cuw(360))
         } else {
             Self(a)
         }
@@ -68,11 +68,13 @@ macro_rules! impl_to_prim_fns {
         fn to_i8(&self) -> Option<i8>       { self.0.to_i8() }
         fn to_i16(&self) -> Option<i16>     { self.0.to_i16() }
         fn to_i32(&self) -> Option<i32>     { self.0.to_i32() }
+        #[cfg(has_i128)]
         fn to_i128(&self) -> Option<i128>   { self.0.to_i128() }
         fn to_usize(&self) -> Option<usize> { self.0.to_usize() }
         fn to_u8(&self) -> Option<u8>       { self.0.to_u8() }
         fn to_u16(&self) -> Option<u16>     { self.0.to_u16() }
         fn to_u32(&self) -> Option<u32>     { self.0.to_u32() }
+        #[cfg(has_i128)]
         fn to_u128(&self) -> Option<u128>   { self.0.to_u128() }
         fn to_f32(&self) -> Option<f32>     { self.0.to_f32() }
         fn to_f64(&self) -> Option<f64>     { self.0.to_f64() }

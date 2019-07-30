@@ -59,6 +59,11 @@ pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
 /// A 64-bit linear RGBA color with 16-bit integer channels
 pub type LinRGBA64Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
+/// A 128-bit HSV color in sRGB colorspace with 32-bit floating point channels
+pub type StdHSVColor = HSVColor<AngleDeg<f32>, f32, SRGBSpace>;
+/// A 128-bit HSV color in linear colorspace with 32-bit floating point channels
+pub type LinHSVColor = HSVColor<AngleDeg<f32>, f32, LinearSpace>;
+
 /// Classify this color's most prominent shades
 pub fn shades(color: SRGBColor) -> Vec<(BaseColor, f32)> {
     use self::BaseColor::*;
@@ -161,7 +166,7 @@ pub fn ansi_bgcolor(color: SRGB24Color, text: &str) -> String {
 
     // color the text as black or white depending on the bg:s lightness
     let fg =
-        if color.float().std_decode().relative_luminance() < std_gamma_decode(0.5) {
+        if color.conv::<f32>().std_decode().relative_luminance() < std_gamma_decode(0.5) {
             format!("{}38;2;255;255;255m", CSI)
         } else {
             format!("{}38;2;;;m", CSI)

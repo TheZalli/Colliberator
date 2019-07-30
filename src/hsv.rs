@@ -31,8 +31,8 @@ impl<H, T, S> HSVColor<H, T, S>
     /// Create a new HSV value.
     ///
     /// The value is normalized on creation.
-    pub fn new(h: H, s: T, v: T) -> Self {
-        HSVColor { h, s, v, _space: PhantomData }.normalize()
+    pub fn new<H2: Into<H>>(h: H2, s: T, v: T) -> Self {
+        HSVColor { h: h.into(), s, v, _space: PhantomData }.normalize()
     }
 
 }
@@ -127,7 +127,7 @@ impl<H: Channel, T: Channel> From<BaseColor> for HSVColor<H, T, SRGBSpace>
         use self::BaseColor::*;
 
         let f = |h: f32, s: f32, v: f32|
-            Self::new(AngleDeg(h).conv(), s.conv(), v.conv());
+            Self::new(AngleDeg(h).conv::<H>(), s.conv(), v.conv());
 
         match base_color {
             Black   => f(  0.0, 0.0, 0.0),

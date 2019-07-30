@@ -28,11 +28,11 @@ pub trait Channel: Sized + PartialOrd + NumCast {
     /// If you are implementing a custom type with a conversion that might fail, re-implement
     /// this method, because this assumes the conversion can't fail.
     fn conv<T: Channel>(self) -> T {
-        cuwf((
+        cuwf(
             cuwtf(self.to_range()) /
             cuwtf(Self::ch_max()) *
             cuwtf(T::ch_max())
-        ).round()) // TODO
+        )
     }
 
     /// Return whether this value is inside the channel's allowed range

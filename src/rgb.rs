@@ -65,12 +65,6 @@ impl<T: Channel, S> Color for RGBColor<T, S> {
 }
 
 impl<S> RGBColor<u8, S> {
-    /// Converts this channel into a floating point channel with range 0.0 - 1.0 .
-    #[inline]
-    pub fn float(self) -> RGBColor<f32, S> {
-        self.map(|x| (x as f32 / 255.0).into())
-    }
-
     /// Create 24-bit RGB color from a 6-character hexcode.
     ///
     /// # Safety
@@ -88,14 +82,6 @@ impl<S> RGBColor<u8, S> {
         h.make_ascii_lowercase();
 
         (f(h[0], h[1]), f(h[2], h[3]), f(h[4], h[5])).into()
-    }
-}
-
-impl<S> RGBColor<u16, S> {
-    /// Converts this channel into a floating point channel from range 0.0 - 1.0 .
-    #[inline]
-    pub fn float(self) -> RGBColor<f32, S> {
-        self.map(|x| (x as f32 / u16::max_value() as f32).into())
     }
 }
 
