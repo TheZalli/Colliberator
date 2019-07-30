@@ -164,7 +164,7 @@ impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
         use crate::BaseColor::*;
 
         let c0 = || T::ch_zero();
-        let cm = || T::ch_mid();
+        let cm = || T::ch_mid() ;
         let c1 = || T::ch_max();
 
         let f = &RGBColor::new;

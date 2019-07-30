@@ -1,14 +1,48 @@
-//! A helper module for angle types.
+//! A module for angle types
 //!
-//! All operations done for these immediately wrap around, so it is impossible to create
-//! a value out of bounds with them
+//! All operations done for these types immediately wrap around, so it is impossible to
+//! create a value out of bounds with them
 
 use std::ops::*;
 use std::f32::consts::PI as PI32;
 
-use num_traits::{ToPrimitive, NumCast};
+use num_traits::{ToPrimitive, NumCast, NumOps};
 
-use crate::{cuw, Channel};
+use crate::{cuwf, cuwtf, Channel};
+
+/// A trait for all angle types
+///
+/// Operations done for these types wrap into it's normal range, starting from 0 and ending in
+/// the value of full revolution (360° in degrees, 2π in radians).
+pub trait Angle: Sized {
+    /// The inner type of this angle
+    type Inner: PartialOrd + From<Self> + Into<Self> + NumCast + NumOps;
+
+    /// Tells whether this angle's inner value is an integer type
+    ///
+    /// If false the angle has a floating point value.
+    const INTEGER: bool;
+
+    /// Value of a full angle (360° or 2π rad)
+    ///
+    /// Any angle with this value should be wrapped to 0.
+    fn full_angle() -> Self;
+
+    /// Value of a zero angle (0° or 0 rad)
+    fn zero_angle() -> Self;
+
+    /// Wraps the angle to the value between zero and full angle
+    fn wrap(self) -> Self {
+        let full = || Self::full_angle().into();
+        let zero = || Self::zero_angle().into();
+        let a = Into::<Self::Inner>::into(self) % full();
+        if a < zero() {
+            (a + full()).into()
+        } else {
+            a.into()
+        }
+    }
+}
 
 /// A wrapper type for angles in degrees
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq)]
@@ -18,61 +52,57 @@ pub struct Deg<T>(pub T);
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Rad(pub f32);
 
-impl Channel for Deg<f32> {
-    const INTEGER: bool = false;
+/// A wrapper type for angles in revolutions
+pub struct Rev<T>(pub T);
 
-    fn ch_max() -> Self { Self(360.0) }
-    fn ch_mid() -> Self { Self(180.0) }
-    fn ch_zero() -> Self { Self(0.0) }
-
-    fn to_range(self) -> Self {
-        let a = self.0 % 360.0;
-        if a < 0.0 {
-            Self(a + 360.0)
-        } else {
-            Self(a)
-        }
-    }
-}
-
-macro_rules! impl_int_deg_channel {
-    ( $( $type:ty ),* ) => { $(
-        impl Channel for Deg<$type> {
-            const INTEGER: bool = true;
-
-            fn ch_max() -> Self { Self(360) }
-            fn ch_mid() -> Self { Self(180) }
-            fn ch_zero() -> Self { Self(0) }
-
-            fn to_range(self) -> Self {
-                let a = self.0 % 360;
-                if a < 0 {
-                    Self(a + 360)
-                } else {
-                    Self(a)
-                }
-            }
+macro_rules! impl_deg_angles {
+    ( $struct_name:ident; $( $type:ty, $isint:expr );* ) => { $(
+        impl Angle for $struct_name<$type> {
+            type Inner = $type;
+            const INTEGER: bool = $isint;
+            fn full_angle() -> Self { Self(360 as $type) }
+            fn zero_angle() -> Self { Self(0 as $type) }
         }
     )* };
 }
 
-impl_int_deg_channel!(i16, i32);
+impl_deg_angles!(Deg; i16, true; i32, true; f32, false);
 
-impl Channel for Rad {
+impl Angle for Rad {
+    type Inner = f32;
     const INTEGER: bool = false;
+    fn full_angle() -> Self { Self(2.0 * PI32) }
+    fn zero_angle() -> Self { Self(0.0) }
+}
 
-    fn ch_max() -> Self { Rad(PI32 * 2.0) }
-    fn ch_mid() -> Self { Rad(PI32) }
-    fn ch_zero() -> Self { Rad(0.0) }
-
-    fn to_range(self) -> Self {
-        let a = self.0 % Self::ch_max().0;
-        if a < cuw(0) {
-            Self(a + Self::ch_max().0)
-        } else {
-            Self(a)
+macro_rules! impl_int_rev_angles {
+    ( $struct_name:ident, $( $type:ty ),* ) => { $(
+        impl Angle for $struct_name<$type> {
+            type Inner = $type;
+            const INTEGER: bool = true;
+            fn full_angle() -> Self { Self(<$type>::ch_max()) }
+            fn zero_angle() -> Self { Self(<$type>::ch_zero()) }
+            fn wrap(self) -> Self { self }
         }
-    }
+    )* };
+}
+
+impl_int_rev_angles!(Rev, u8, u16, u32);
+
+impl Angle for Rev<f32> {
+    type Inner = f32;
+    const INTEGER: bool = false;
+    fn full_angle() -> Self { Self(1.0) }
+    fn zero_angle() -> Self { Self(0.0) }
+}
+
+impl<T: Angle + NumCast + PartialOrd> Channel for T {
+    const INTEGER: bool = T::INTEGER;
+
+    fn ch_max() -> Self { T::full_angle() }
+    fn ch_mid() -> Self { cuwf(cuwtf(Self::ch_max()) / cuwtf(2)) }
+    fn ch_zero() -> Self { T::zero_angle() }
+    fn to_range(self) -> Self { self.wrap() }
 }
 
 impl<T: NumCast> NumCast for Deg<T> {
@@ -84,6 +114,12 @@ impl<T: NumCast> NumCast for Deg<T> {
 impl NumCast for Rad {
     fn from<T: ToPrimitive>(n: T) -> Option<Self> {
         n.to_f32().map(Self)
+    }
+}
+
+impl<T: NumCast> NumCast for Rev<T> {
+    fn from<U: ToPrimitive>(n: U) -> Option<Self> {
+        T::from(n).map(Self)
     }
 }
 
@@ -116,6 +152,10 @@ impl ToPrimitive for Rad {
     impl_to_prim_fns!();
 }
 
+impl<T: ToPrimitive> ToPrimitive for Rev<T> {
+    impl_to_prim_fns!();
+}
+
 macro_rules! generic_newtype_from_impls {
     ( $struct_name:ident, $( $num_t:ty ),* ) => { $(
         impl From<$num_t> for $struct_name<$num_t> {
@@ -138,21 +178,23 @@ impl From<Rad> for f32 {
     fn from(angle: Rad) -> Self { angle.0 }
 }
 
-macro_rules! impl_deg_ops {
+generic_newtype_from_impls!(Rev, u8, u16, u32, f32);
+
+macro_rules! impl_newtype_ops {
     ( $struct_name:ident;
       $( $trait:ident, $fun:ident, $as_trait:ident, $as_fun:ident );*
     ) => { $(
         impl<T> $trait for $struct_name<T>
-            where T: $trait<Output=T>, Self: Channel
+            where T: $trait<Output=T>, Self: Angle
         {
             type Output = Self;
             fn $fun(self, rhs: Self) -> Self {
-                (Self((self.0).$fun(rhs.0))).to_range()
+                (Self((self.0).$fun(rhs.0))).wrap()
             }
         }
 
         impl<T> $as_trait for $struct_name<T>
-            where T: $as_trait, Self: Channel
+            where T: $as_trait, Self: Angle
         {
             fn $as_fun(&mut self, rhs: Self) {
                 (self.0).$as_fun(rhs.0);
@@ -166,16 +208,16 @@ macro_rules! impl_rad_ops {
       $( $trait:ident, $fun:ident, $as_trait:ident, $as_fun:ident );*
     ) => { $(
         impl $trait for $struct_name
-            where Self: Channel
+            where Self: Angle
         {
             type Output = Self;
             fn $fun(self, rhs: Self) -> Self {
-                (Self((self.0).$fun(rhs.0))).to_range()
+                (Self((self.0).$fun(rhs.0))).wrap()
             }
         }
 
         impl $as_trait for $struct_name
-            where Self: Channel
+            where Self: Angle
         {
             fn $as_fun(&mut self, rhs: Self) {
                 (self.0).$as_fun(rhs.0);
@@ -184,7 +226,7 @@ macro_rules! impl_rad_ops {
     )* };
 }
 
-impl_deg_ops!(Deg;
+impl_newtype_ops!(Deg;
     Add, add, AddAssign, add_assign;
     Sub, sub, SubAssign, sub_assign;
     Mul, mul, MulAssign, mul_assign;
@@ -193,6 +235,14 @@ impl_deg_ops!(Deg;
 );
 
 impl_rad_ops!(Rad;
+    Add, add, AddAssign, add_assign;
+    Sub, sub, SubAssign, sub_assign;
+    Mul, mul, MulAssign, mul_assign;
+    Div, div, DivAssign, div_assign;
+    Rem, rem, RemAssign, rem_assign
+);
+
+impl_newtype_ops!(Rev;
     Add, add, AddAssign, add_assign;
     Sub, sub, SubAssign, sub_assign;
     Mul, mul, MulAssign, mul_assign;
