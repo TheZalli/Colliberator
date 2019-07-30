@@ -23,6 +23,11 @@ impl<H, T, S> HSVColor<H, T, S> {
     pub fn tuple(self) -> (H, T, T) {
         (self.h, self.s, self.v)
     }
+    /// Deconstructs this color into an array of it's channels
+    #[inline]
+    pub fn array<U: From<H> + From<T>>(self) -> [U; 3] {
+        [self.h.into(), self.s.into(), self.v.into()]
+    }
 }
 
 impl<H, T, S> HSVColor<H, T, S>
@@ -150,21 +155,37 @@ impl<H: Channel, T: Channel> From<BaseColor> for HSVColor<H, T, LinearSpace> {
     }
 }
 
-impl<H: Channel, T: Channel, S> From<(H, T, T)> for HSVColor<H, T, S>
-    where Self: Color
+impl<H2, H, T, S> From<(H2, T, T)> for HSVColor<H, T, S>
+    where Self: Color, H2: Into<H>
 {
-    fn from(tuple: (H, T, T)) -> Self {
+    fn from(tuple: (H2, T, T)) -> Self {
         let (h, s, v) = tuple;
         HSVColor::new(h, s, v)
     }
 }
 
-impl<H: Clone + Channel, T: Clone + Channel, S> From<&(H, T, T)> for HSVColor<H, T, S>
-    where Self: Color
+impl<H2, H, T, S> From<&(H2, T, T)> for HSVColor<H, T, S>
+    where Self: Color, H2: Into<H> + Clone, T: Clone
 {
-    fn from(tuple: &(H, T, T)) -> Self {
+    fn from(tuple: &(H2, T, T)) -> Self {
         let (h, s, v) = tuple.clone();
         HSVColor::new(h, s, v)
+    }
+}
+
+impl<U, H, T, S> From<[U; 3]> for HSVColor<H, T, S>
+    where Self: Color, U: Clone + Into<H> + Into<T>
+{
+    fn from(array: [U; 3]) -> Self {
+        Self::new(array[0].clone(), array[1].clone().into(), array[2].clone().into())
+    }
+}
+
+impl<U, H, T, S> From<&[U; 3]> for HSVColor<H, T, S>
+    where Self: Color, U: Clone + Into<H> + Into<T>
+{
+    fn from(array: &[U; 3]) -> Self {
+        Self::new(array[0].clone(), array[1].clone().into(), array[2].clone().into())
     }
 }
 

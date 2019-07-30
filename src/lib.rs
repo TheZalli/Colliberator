@@ -60,8 +60,12 @@ pub type LinRGBAColor = Alpha<RGBColor<f32, LinearSpace>, f32>;
 pub type LinRGBA64Color = Alpha<RGBColor<u16, LinearSpace>, u16>;
 
 /// A 128-bit HSV color in sRGB colorspace with 32-bit floating point channels
+///
+/// The hue channel is in degrees in the range [0, 360).
 pub type StdHSVColor = HSVColor<AngleDeg<f32>, f32, SRGBSpace>;
 /// A 128-bit HSV color in linear colorspace with 32-bit floating point channels
+///
+/// The hue channel is in degrees in the range [0, 360).
 pub type LinHSVColor = HSVColor<AngleDeg<f32>, f32, LinearSpace>;
 
 /// Classify this color's most prominent shades

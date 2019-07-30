@@ -78,15 +78,19 @@ fn normalization() {
     use std::f32::{INFINITY, NEG_INFINITY};
     let rgba = SRGBAColor::new((2.0, -10.0, NEG_INFINITY), INFINITY);
     let hsv1 = StdHSVColor::new(-90.0, 2.0, -5.0);
-    let hsv2 = StdHSVColor::new(0.6, 0.0, 0.5);
-    let hsv3 = StdHSVColor::new(0.0, 0.9, 0.2);
-    let hsv4 = StdHSVColor::new(0.5, 0.25, 0.0);
-    let hsv5 = StdHSVColor::new(0.0, 0.0, 0.8);
+    let hsv2 = StdHSVColor::new(400.0, 2.0, -5.0);
+    let hsv3 = StdHSVColor::new(60.0, 0.0, 0.5);
+    let hsv4 = StdHSVColor::new(0.0, 0.9, 0.2);
+    let hsv5 = StdHSVColor::new(50.0, 0.25, 0.0);
+    let hsv6 = StdHSVColor::new(0.0, 0.0, 0.8);
+    let hsv7 = StdHSVColor::from([45.0, 0.0, 0.0]);
 
     assert_eq!(rgba.tuple(), (1.0, 0.0, 0.0, 1.0));
-    assert_eq!(hsv1.tuple(), (AngleDeg(-90.0 + 360.0), 1.0, 0.0));
-    assert_eq!(hsv2.tuple(), (AngleDeg(0.0), 0.0, 0.5));
-    assert_eq!(hsv3.tuple(), (AngleDeg(0.0), 0.9, 0.2));
-    assert_eq!(hsv4.tuple(), (AngleDeg(0.0), 0.0, 0.0));
-    assert_eq!(hsv5.tuple(), (AngleDeg(0.0), 0.0, 0.8));
+    assert_eq!(hsv1.tuple(), (AngleDeg(270.0), 1.0, 0.0));
+    assert_eq!(hsv2.tuple(), (AngleDeg(40.0), 1.0, 0.0));
+    assert_eq!(hsv3.tuple(), (AngleDeg(0.0), 0.0, 0.5));
+    assert_eq!(hsv4.tuple(), (AngleDeg(0.0), 0.9, 0.2));
+    assert_eq!(hsv5.tuple(), (AngleDeg(0.0), 0.0, 0.0));
+    assert_eq!(hsv6.array::<f32>(), [0.0, 0.0, 0.8]);
+    assert_eq!(hsv7.tuple(), (0.0.into(), 0.0, 0.0));
 }

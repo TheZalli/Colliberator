@@ -94,13 +94,21 @@ macro_rules! generic_newtype_from_impls {
         impl From<$num_t> for $struct_name<$num_t> {
             fn from(n: $num_t) -> Self { Self(n) }
         }
+
+        impl From<$struct_name<$num_t>> for $num_t {
+            fn from(angle: $struct_name<$num_t>) -> Self { angle.0 }
+        }
     )* };
 }
 
-generic_newtype_from_impls!(AngleDeg, u16, u32, f32);
+generic_newtype_from_impls!(AngleDeg, i16, i32, f32);
 
 impl From<f32> for AngleRad {
     fn from(n: f32) -> Self { Self(n) }
+}
+
+impl From<AngleRad> for f32 {
+    fn from(angle: AngleRad) -> Self { angle.0 }
 }
 
 macro_rules! impl_deg_ops {
