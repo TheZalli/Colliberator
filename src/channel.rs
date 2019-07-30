@@ -6,6 +6,11 @@ use crate::{cuwf, cuwtf};
 
 /// A trait for color channels
 pub trait Channel: Sized + PartialOrd + NumCast {
+    /// Tells whether this is a channel with integer value
+    ///
+    /// If false the channel has a floating point value.
+    const INTEGER: bool;
+
     /// The maximum value for this channel, inclusive
     ///
     /// with integers it's usually the max value, with floats it's one.
@@ -28,11 +33,10 @@ pub trait Channel: Sized + PartialOrd + NumCast {
     /// If you are implementing a custom type with a conversion that might fail, re-implement
     /// this method, because this assumes the conversion can't fail.
     fn conv<T: Channel>(self) -> T {
-        cuwf(
-            cuwtf(self.to_range()) /
-            cuwtf(Self::ch_max()) *
-            cuwtf(T::ch_max())
-        )
+        let float = cuwtf(self.to_range()) /
+                    cuwtf(Self::ch_max()) *
+                    cuwtf(T::ch_max());
+        cuwf(if T::INTEGER { float.round() } else { float })
     }
 
     /// Return whether this value is inside the channel's allowed range
@@ -51,6 +55,7 @@ pub trait Channel: Sized + PartialOrd + NumCast {
 macro_rules! impl_uint_channels {
     ( $( $type:ty ),* ) => { $(
         impl Channel for $type {
+            const INTEGER: bool = true;
             fn ch_max() -> Self { <$type>::max_value() }
             fn ch_mid() -> Self { <$type>::max_value() / 2 }
             fn ch_zero() -> Self { 0 }
@@ -61,6 +66,7 @@ macro_rules! impl_uint_channels {
 impl_uint_channels!(u8, u16, u32);
 
 impl Channel for f32 {
+    const INTEGER: bool = false;
     fn ch_max() -> Self { 1.0 }
     fn ch_mid() -> Self { 0.5 }
     fn ch_zero() -> Self { 0.0 }

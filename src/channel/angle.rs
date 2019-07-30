@@ -6,7 +6,7 @@
 use std::ops::*;
 use std::f32::consts::PI as PI32;
 
-use num_traits::{ToPrimitive, NumCast, NumOps};
+use num_traits::{ToPrimitive, NumCast};
 
 use crate::{cuw, Channel};
 
@@ -18,22 +18,49 @@ pub struct AngleDeg<T>(pub T);
 #[derive(Debug, Default, Copy, Clone, PartialOrd, PartialEq)]
 pub struct AngleRad(pub f32);
 
-impl<T: NumCast + NumOps + PartialOrd> Channel for AngleDeg<T> {
-    fn ch_max() -> Self { AngleDeg(cuw(360)) }
-    fn ch_mid() -> Self { AngleDeg(cuw(180)) }
-    fn ch_zero() -> Self { AngleDeg(cuw(0)) }
+impl Channel for AngleDeg<f32> {
+    const INTEGER: bool = false;
+
+    fn ch_max() -> Self { Self(360.0) }
+    fn ch_mid() -> Self { Self(180.0) }
+    fn ch_zero() -> Self { Self(0.0) }
 
     fn to_range(self) -> Self {
-        let a: T = self.0 % cuw(360);
-        if a < cuw(0.0) {
-            Self(a + cuw(360))
+        let a = self.0 % 360.0;
+        if a < 0.0 {
+            Self(a + 360.0)
         } else {
             Self(a)
         }
     }
 }
 
+macro_rules! impl_int_deg_channel {
+    ( $( $type:ty ),* ) => { $(
+        impl Channel for AngleDeg<$type> {
+            const INTEGER: bool = true;
+
+            fn ch_max() -> Self { Self(360) }
+            fn ch_mid() -> Self { Self(180) }
+            fn ch_zero() -> Self { Self(0) }
+
+            fn to_range(self) -> Self {
+                let a = self.0 % 360;
+                if a < 0 {
+                    Self(a + 360)
+                } else {
+                    Self(a)
+                }
+            }
+        }
+    )* };
+}
+
+impl_int_deg_channel!(i16, i32);
+
 impl Channel for AngleRad {
+    const INTEGER: bool = false;
+
     fn ch_max() -> Self { AngleRad(PI32 * 2.0) }
     fn ch_mid() -> Self { AngleRad(PI32) }
     fn ch_zero() -> Self { AngleRad(0.0) }
@@ -172,5 +199,3 @@ impl_rad_ops!(AngleRad;
     Div, div, DivAssign, div_assign;
     Rem, rem, RemAssign, rem_assign
 );
-
-
