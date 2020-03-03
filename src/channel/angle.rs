@@ -102,7 +102,7 @@ impl<T: Angle + NumCast + PartialOrd> Channel for T {
     fn ch_max() -> Self { T::full_angle() }
     fn ch_mid() -> Self { cuwf(cuwtf(Self::ch_max()) / cuwtf(2)) }
     fn ch_zero() -> Self { T::zero_angle() }
-    fn to_range(self) -> Self { self.wrap() }
+    fn clamp(self) -> Self { self.wrap() }
 }
 
 impl<T: NumCast> NumCast for Deg<T> {

@@ -71,6 +71,7 @@ impl<H: Channel, T: Channel, S> HSVColor<H, T, S> {
          cuwf::<T>(b + min)).into()
     }
 
+    /// Converts the channels of this color into another type
     #[inline]
     pub fn conv<H2: Channel, T2: Channel>(self) -> HSVColor<H2, T2, S> {
         HSVColor { h: self.h.conv(), s: self.s.conv(), v: self.v.conv(), _space: PhantomData }
@@ -91,14 +92,14 @@ impl<H: Channel, T: Channel, S> Color for HSVColor<H, T, S> {
             HSVColor {
                 h: H::ch_zero(),
                 s: T::ch_zero(),
-                v: v.to_range(),
+                v: v.clamp(),
                 _space: PhantomData
             }
         } else {
             HSVColor {
-                h: h.to_range(),
-                s: s.to_range(),
-                v: v.to_range(),
+                h: h.clamp(),
+                s: s.clamp(),
+                v: v.clamp(),
                 _space: PhantomData
             }
         }

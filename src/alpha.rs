@@ -16,19 +16,19 @@ pub struct Alpha<C, A> {
 }
 
 impl<C, A: Channel> Alpha<C, A> {
-    /// Creates a new alpha channel.
+    /// Creates a new alpha channel
     ///
     /// This makes sure that the alpha-channel is in the proper range
-    /// by calling `Channel::to_range`
+    /// by calling `Channel::to_range`.
     pub fn new<B: Into<C>>(color: B, alpha: A) -> Self {
-        Alpha { color: color.into(), alpha: alpha.to_range() }
+        Alpha { color: color.into(), alpha: alpha.clamp() }
     }
 }
 
 impl<C: Color, A: Channel> Color for Alpha<C, A> {
     fn normalize(self) -> Self {
         let color = self.color.normalize();
-        let alpha = self.alpha.to_range();
+        let alpha = self.alpha.clamp();
         Alpha { color, alpha }
     }
 
@@ -52,12 +52,14 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
 }
 
 impl<T: Channel, A, S> Alpha<RGBColor<T, S>, A> {
+    /// Converts the RGBA to HSVA color
     pub fn hsv<H: Channel>(self) -> Alpha<HSVColor<H, T, S>, A> {
         Alpha { color: self.color.hsv(), alpha: self.alpha }
     }
 }
 
 impl<H: Channel, T: Channel, A, S> Alpha<HSVColor<H, T, S>, A> {
+    /// Converts the HSVA color to RGBA
     pub fn rgb(self) -> Alpha<RGBColor<T, S>, A> {
         Alpha { color: self.color.rgb(), alpha: self.alpha }
     }

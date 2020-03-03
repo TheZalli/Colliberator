@@ -42,7 +42,7 @@ impl<T: Channel, S> RGBColor<T, S>  {
     ///
     /// They are clamped to the allowed color channel range.
     pub fn new(r: T, g: T, b: T) -> Self {
-        RGBColor { r, g, b, _space: PhantomData }.map(Channel::to_range)
+        RGBColor { r, g, b, _space: PhantomData }.map(Channel::clamp)
     }
 
     /// Converts the channels of this color into another type
@@ -55,7 +55,7 @@ impl<T: Channel, S> RGBColor<T, S>  {
 impl<T: Channel, S> Color for RGBColor<T, S> {
      #[inline]
     fn normalize(self) -> Self {
-        self.map(Channel::to_range)
+        self.map(Channel::clamp)
     }
 
     #[inline]
