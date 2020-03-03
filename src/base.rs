@@ -24,16 +24,18 @@ impl fmt::Display for BaseColor {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::BaseColor::*;
 
-        write!(f, "{}",
+        write!(
+            f,
+            "{}",
             match *self {
-                Black   => "black",
-                Grey    => "grey",
-                White   => "white",
-                Red     => "red",
-                Yellow  => "yellow",
-                Green   => "green",
-                Cyan    => "cyan",
-                Blue    => "blue",
+                Black => "black",
+                Grey => "grey",
+                White => "white",
+                Red => "red",
+                Yellow => "yellow",
+                Green => "green",
+                Cyan => "cyan",
+                Blue => "blue",
                 Magenta => "magenta",
             }
         )

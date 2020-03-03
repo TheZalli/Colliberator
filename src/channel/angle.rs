@@ -3,10 +3,10 @@
 //! All operations done for these types immediately wrap around, so it is impossible to
 //! create a value out of bounds with them
 
-use std::ops::*;
 use std::f32::consts::PI as PI32;
+use std::ops::*;
 
-use num_traits::{ToPrimitive, NumCast, NumOps};
+use num_traits::{NumCast, NumOps, ToPrimitive};
 
 use crate::{cuwf, cuwtf, Channel};
 
@@ -71,8 +71,12 @@ impl_deg_angles!(Deg; i16, true; i32, true; f32, false);
 impl Angle for Rad {
     type Inner = f32;
     const INTEGER: bool = false;
-    fn full_angle() -> Self { Self(2.0 * PI32) }
-    fn zero_angle() -> Self { Self(0.0) }
+    fn full_angle() -> Self {
+        Self(2.0 * PI32)
+    }
+    fn zero_angle() -> Self {
+        Self(0.0)
+    }
 }
 
 macro_rules! impl_int_rev_angles {
@@ -92,17 +96,29 @@ impl_int_rev_angles!(Rev, u8, u16, u32);
 impl Angle for Rev<f32> {
     type Inner = f32;
     const INTEGER: bool = false;
-    fn full_angle() -> Self { Self(1.0) }
-    fn zero_angle() -> Self { Self(0.0) }
+    fn full_angle() -> Self {
+        Self(1.0)
+    }
+    fn zero_angle() -> Self {
+        Self(0.0)
+    }
 }
 
 impl<T: Angle + NumCast + PartialOrd> Channel for T {
     const INTEGER: bool = T::INTEGER;
 
-    fn ch_max() -> Self { T::full_angle() }
-    fn ch_mid() -> Self { cuwf(cuwtf(Self::ch_max()) / cuwtf(2)) }
-    fn ch_zero() -> Self { T::zero_angle() }
-    fn clamp(self) -> Self { self.wrap() }
+    fn ch_max() -> Self {
+        T::full_angle()
+    }
+    fn ch_mid() -> Self {
+        cuwf(cuwtf(Self::ch_max()) / cuwtf(2))
+    }
+    fn ch_zero() -> Self {
+        T::zero_angle()
+    }
+    fn clamp(self) -> Self {
+        self.wrap()
+    }
 }
 
 impl<T: NumCast> NumCast for Deg<T> {
@@ -171,11 +187,15 @@ macro_rules! generic_newtype_from_impls {
 generic_newtype_from_impls!(Deg, i16, i32, f32);
 
 impl From<f32> for Rad {
-    fn from(n: f32) -> Self { Self(n) }
+    fn from(n: f32) -> Self {
+        Self(n)
+    }
 }
 
 impl From<Rad> for f32 {
-    fn from(angle: Rad) -> Self { angle.0 }
+    fn from(angle: Rad) -> Self {
+        angle.0
+    }
 }
 
 generic_newtype_from_impls!(Rev, u8, u16, u32, f32);

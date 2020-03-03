@@ -1,6 +1,6 @@
 use std::fmt;
 use std::marker::PhantomData;
-use std::ops::{Add, Sub, Mul, Div};
+use std::ops::{Add, Div, Mul, Sub};
 
 use num_traits::Float;
 
@@ -14,14 +14,19 @@ pub struct RGBColor<T, S> {
     pub r: T,
     pub g: T,
     pub b: T,
-    _space: PhantomData<S>
+    _space: PhantomData<S>,
 }
 
 impl<T, S> RGBColor<T, S> {
     /// Applies the given function to all color channels.
     #[inline]
     pub fn map<U, F: Fn(T) -> U>(self, fun: F) -> RGBColor<U, S> {
-        RGBColor { r: fun(self.r), g: fun(self.g), b: fun(self.b), _space: PhantomData }
+        RGBColor {
+            r: fun(self.r),
+            g: fun(self.g),
+            b: fun(self.b),
+            _space: PhantomData,
+        }
     }
 
     /// Deconstructs this color into a tuple of it's channels
@@ -37,12 +42,18 @@ impl<T, S> RGBColor<T, S> {
     }
 }
 
-impl<T: Channel, S> RGBColor<T, S>  {
+impl<T: Channel, S> RGBColor<T, S> {
     /// Creates a new RGB-color with the given values
     ///
     /// They are clamped to the allowed color channel range.
     pub fn new(r: T, g: T, b: T) -> Self {
-        RGBColor { r, g, b, _space: PhantomData }.map(Channel::clamp)
+        RGBColor {
+            r,
+            g,
+            b,
+            _space: PhantomData,
+        }
+        .map(Channel::clamp)
     }
 
     /// Converts the channels of this color into another type
@@ -53,7 +64,7 @@ impl<T: Channel, S> RGBColor<T, S>  {
 }
 
 impl<T: Channel, S> Color for RGBColor<T, S> {
-     #[inline]
+    #[inline]
     fn normalize(self) -> Self {
         self.map(Channel::clamp)
     }
@@ -74,8 +85,8 @@ impl<S> RGBColor<u8, S> {
     /// If `hex_str` doesn't consist only from 6 characters from range `[0-9a-fA-F]` then this
     /// function will result in a panic.
     pub unsafe fn from_hex_unchecked(hex_str: Box<str>) -> Self {
-        let f = |h1: u8, h2: u8|
-            u8::from_str_radix(str::from_utf8_unchecked(&[h1, h2]), 16).unwrap();
+        let f =
+            |h1: u8, h2: u8| u8::from_str_radix(str::from_utf8_unchecked(&[h1, h2]), 16).unwrap();
 
         let mut hex_str = hex_str;
         let h = hex_str.as_bytes_mut();
@@ -95,8 +106,8 @@ impl<T: Channel, S> RGBColor<T, S> {
 
         let value = max;
         let saturation = if max == 0.0 { 0.0 } else { delta / max };
-        let hue = Deg ( 60.0 *
-            if delta == 0.0 {
+        let hue = Deg(60.0
+            * if delta == 0.0 {
                 0.0
             } else if max == r {
                 ((g - b) / delta) % 6.0
@@ -151,7 +162,7 @@ impl<T: Clone, S> Clone for RGBColor<T, S> {
             r: self.r.clone(),
             g: self.g.clone(),
             b: self.b.clone(),
-            _space: PhantomData
+            _space: PhantomData,
         }
     }
 }
@@ -164,19 +175,19 @@ impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
         use crate::BaseColor::*;
 
         let c0 = || T::ch_zero();
-        let cm = || T::ch_mid() ;
+        let cm = || T::ch_mid();
         let c1 = || T::ch_max();
 
         let f = &RGBColor::new;
         match base_color {
-            Black   => f(c0(), c0(), c0()),
-            Grey    => f(cm(), cm(), cm()),
-            White   => f(c1(), c1(), c1()),
-            Red     => f(c1(), c0(), c0()),
-            Yellow  => f(c1(), c1(), c0()),
-            Green   => f(c0(), c1(), c0()),
-            Cyan    => f(c0(), c1(), c1()),
-            Blue    => f(c0(), c0(), c1()),
+            Black => f(c0(), c0(), c0()),
+            Grey => f(cm(), cm(), cm()),
+            White => f(c1(), c1(), c1()),
+            Red => f(c1(), c0(), c0()),
+            Yellow => f(c1(), c1(), c0()),
+            Green => f(c0(), c1(), c0()),
+            Cyan => f(c0(), c1(), c1()),
+            Blue => f(c0(), c0(), c1()),
             Magenta => f(c1(), c0(), c1()),
         }
     }
@@ -185,7 +196,9 @@ impl<T: Channel> From<BaseColor> for RGBColor<T, SRGBSpace> {
 impl<T: Channel> From<BaseColor> for RGBColor<T, LinearSpace> {
     #[inline]
     fn from(base_color: BaseColor) -> Self {
-        RGBColor::<f32, SRGBSpace>::from(base_color).std_decode().conv()
+        RGBColor::<f32, SRGBSpace>::from(base_color)
+            .std_decode()
+            .conv()
     }
 }
 
@@ -216,7 +229,8 @@ impl<T: Clone + Channel, S> From<&[T; 3]> for RGBColor<T, S> {
 }
 
 impl<T> Add for RGBColor<T, LinearSpace>
-    where T: Channel + Add<Output=T>
+where
+    T: Channel + Add<Output = T>,
 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
@@ -225,7 +239,8 @@ impl<T> Add for RGBColor<T, LinearSpace>
 }
 
 impl<T> Sub for RGBColor<T, LinearSpace>
-    where T: Channel + Sub<Output=T>
+where
+    T: Channel + Sub<Output = T>,
 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -234,7 +249,8 @@ impl<T> Sub for RGBColor<T, LinearSpace>
 }
 
 impl<T> Mul for RGBColor<T, LinearSpace>
-    where T: Channel + Mul<Output=T>
+where
+    T: Channel + Mul<Output = T>,
 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
@@ -243,7 +259,8 @@ impl<T> Mul for RGBColor<T, LinearSpace>
 }
 
 impl<T> Div for RGBColor<T, LinearSpace>
-    where T: Channel + Div<Output=T>
+where
+    T: Channel + Div<Output = T>,
 {
     type Output = Self;
     fn div(self, rhs: Self) -> Self::Output {
@@ -252,7 +269,8 @@ impl<T> Div for RGBColor<T, LinearSpace>
 }
 
 impl<T> Mul<T> for RGBColor<T, LinearSpace>
-    where T: Channel + Mul<Output=T> + Clone
+where
+    T: Channel + Mul<Output = T> + Clone,
 {
     type Output = Self;
     fn mul(self, rhs: T) -> Self::Output {
@@ -261,7 +279,8 @@ impl<T> Mul<T> for RGBColor<T, LinearSpace>
 }
 
 impl<T> Div<T> for RGBColor<T, LinearSpace>
-    where T: Channel + Div<Output=T> + Clone
+where
+    T: Channel + Div<Output = T> + Clone,
 {
     type Output = Self;
     fn div(self, rhs: T) -> Self::Output {

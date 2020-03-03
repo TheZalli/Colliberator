@@ -30,9 +30,7 @@ pub trait Channel: Sized + PartialOrd + NumCast {
     ///
     /// The values will be made to fit into their range.
     fn conv<T: Channel>(self) -> T {
-        let float = cuwtf(self.clamp()) /
-                    cuwtf(Self::ch_max()) *
-                    cuwtf(T::ch_max());
+        let float = cuwtf(self.clamp()) / cuwtf(Self::ch_max()) * cuwtf(T::ch_max());
         cuwf(if T::INTEGER { float.round() } else { float })
     }
 
@@ -43,9 +41,13 @@ pub trait Channel: Sized + PartialOrd + NumCast {
 
     /// Returns this value clamped to channel's range
     fn clamp(self) -> Self {
-        if self > Self::ch_max()        { Self::ch_max() }
-        else if self < Self::ch_zero()  { Self::ch_zero() }
-        else                            { self }
+        if self > Self::ch_max() {
+            Self::ch_max()
+        } else if self < Self::ch_zero() {
+            Self::ch_zero()
+        } else {
+            self
+        }
     }
 }
 
@@ -64,7 +66,13 @@ impl_uint_channels!(u8, u16, u32);
 
 impl Channel for f32 {
     const INTEGER: bool = false;
-    fn ch_max() -> Self { 1.0 }
-    fn ch_mid() -> Self { 0.5 }
-    fn ch_zero() -> Self { 0.0 }
+    fn ch_max() -> Self {
+        1.0
+    }
+    fn ch_mid() -> Self {
+        0.5
+    }
+    fn ch_zero() -> Self {
+        0.0
+    }
 }

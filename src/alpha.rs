@@ -12,7 +12,7 @@ use crate::*;
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Alpha<C, A> {
     pub color: C,
-    pub alpha: A
+    pub alpha: A,
 }
 
 impl<C, A: Channel> Alpha<C, A> {
@@ -21,7 +21,10 @@ impl<C, A: Channel> Alpha<C, A> {
     /// This makes sure that the alpha-channel is in the proper range
     /// by calling `Channel::to_range`.
     pub fn new<B: Into<C>>(color: B, alpha: A) -> Self {
-        Alpha { color: color.into(), alpha: alpha.clamp() }
+        Alpha {
+            color: color.into(),
+            alpha: alpha.clamp(),
+        }
     }
 }
 
@@ -54,35 +57,50 @@ impl<T, S> Alpha<RGBColor<T, S>, T> {
 impl<T: Channel, A, S> Alpha<RGBColor<T, S>, A> {
     /// Converts the RGBA to HSVA color
     pub fn hsv<H: Channel>(self) -> Alpha<HSVColor<H, T, S>, A> {
-        Alpha { color: self.color.hsv(), alpha: self.alpha }
+        Alpha {
+            color: self.color.hsv(),
+            alpha: self.alpha,
+        }
     }
 }
 
 impl<H: Channel, T: Channel, A, S> Alpha<HSVColor<H, T, S>, A> {
     /// Converts the HSVA color to RGBA
     pub fn rgb(self) -> Alpha<RGBColor<T, S>, A> {
-        Alpha { color: self.color.rgb(), alpha: self.alpha }
+        Alpha {
+            color: self.color.rgb(),
+            alpha: self.alpha,
+        }
     }
 }
 
 impl<T: Float + Channel, A> Alpha<RGBColor<T, SRGBSpace>, A> {
     /// Gamma decodes this sRGBA color into the linear space
     pub fn std_decode(self) -> Alpha<RGBColor<T, LinearSpace>, A> {
-        Alpha { color: self.color.std_decode(), alpha: self.alpha }
+        Alpha {
+            color: self.color.std_decode(),
+            alpha: self.alpha,
+        }
     }
 }
 
 impl<T: Float + Channel, A> Alpha<RGBColor<T, LinearSpace>, A> {
     /// Gamma encodes this linear alpha color into the sRGBA space
     pub fn std_encode(self) -> Alpha<RGBColor<T, SRGBSpace>, A> {
-        Alpha { color: self.color.std_encode(), alpha: self.alpha }
+        Alpha {
+            color: self.color.std_encode(),
+            alpha: self.alpha,
+        }
     }
 }
 
 impl<T: Channel, A: Channel, S> Alpha<RGBColor<T, S>, A> {
     /// Converts the channels of this alpha color into other channel types
     pub fn conv<U: Channel, B: Channel>(self) -> Alpha<RGBColor<U, S>, B> {
-        Alpha { color: self.color.conv(), alpha: self.alpha.conv() }
+        Alpha {
+            color: self.color.conv(),
+            alpha: self.alpha.conv(),
+        }
     }
 }
 
@@ -106,13 +124,19 @@ impl<C, A> AsMut<C> for Alpha<C, A> {
 
 impl<T: Color, A: Channel> From<T> for Alpha<T, A> {
     fn from(color: T) -> Self {
-        Alpha { color, alpha: A::ch_max() }
+        Alpha {
+            color,
+            alpha: A::ch_max(),
+        }
     }
 }
 
 impl<T: From<BaseColor>, A: Channel> From<BaseColor> for Alpha<T, A> {
     fn from(base_color: BaseColor) -> Self {
-        Alpha { color: base_color.into(), alpha: A::ch_max() }
+        Alpha {
+            color: base_color.into(),
+            alpha: A::ch_max(),
+        }
     }
 }
 

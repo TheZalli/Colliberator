@@ -1,4 +1,4 @@
-use std::iter::{IntoIterator, ExactSizeIterator, FusedIterator};
+use std::iter::{ExactSizeIterator, FusedIterator, IntoIterator};
 use std::mem;
 
 use crate::{Alpha, RGBColor};
@@ -15,14 +15,14 @@ impl<T> IntoIter<T> {
     fn from4(x: T, y: T, z: T, w: T) -> Self {
         IntoIter {
             array: [x, y, z, w],
-            idx: 0
+            idx: 0,
         }
     }
 
     fn from3(x: T, y: T, z: T) -> Self {
         IntoIter {
-            array: [ unsafe { mem::zeroed() }, x, y, z],
-            idx: 1
+            array: [unsafe { mem::zeroed() }, x, y, z],
+            idx: 1,
         }
     }
 }
@@ -31,7 +31,9 @@ impl<T: Clone> Iterator for IntoIter<T> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.idx == ARRAY_MAX_LEN { return None; }
+        if self.idx == ARRAY_MAX_LEN {
+            return None;
+        }
         let output = self.array[self.idx as usize].clone();
         self.idx += 1;
         Some(output)

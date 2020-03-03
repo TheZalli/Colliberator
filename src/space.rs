@@ -1,7 +1,7 @@
 //! Colorspaces and conversions between them
 
-use num_traits::Float;
 use crate::cuw;
+use num_traits::Float;
 
 /// The sRGB gamma value, used for sRGB decoding and encoding
 pub const STD_GAMMA: f32 = 2.4;

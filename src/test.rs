@@ -21,7 +21,11 @@ fn srgb_to_linear() {
 #[test]
 fn srgb_to_linear_to_hsv() {
     let srgb = SRGB24Color::new(128, 255, 55);
-    let lin_hsv = srgb.conv::<f32>().std_decode().hsv::<Deg<f32>>().normalize();
+    let lin_hsv = srgb
+        .conv::<f32>()
+        .std_decode()
+        .hsv::<Deg<f32>>()
+        .normalize();
     let srgb2 = lin_hsv.rgb().std_encode().conv();
 
     assert_eq!(srgb, srgb2)
@@ -31,9 +35,7 @@ fn srgb_to_linear_to_hsv() {
 fn hex_conversion() {
     for hex in (0..=0xFFFFFF).step_by(30_000) {
         let hex_str: String = format!("{:06X}", hex);
-        let color = unsafe {
-            SRGB24Color::from_hex_unchecked(hex_str.clone().into_boxed_str())
-        };
+        let color = unsafe { SRGB24Color::from_hex_unchecked(hex_str.clone().into_boxed_str()) };
         let hex_str2 = format!("{:X}", color);
 
         assert_eq!(hex_str, hex_str2);
