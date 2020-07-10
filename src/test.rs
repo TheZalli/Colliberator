@@ -32,13 +32,41 @@ fn srgb_to_linear_to_hsv() {
 }
 
 #[test]
-fn hex_conversion() {
-    for hex in (0..=0xFFFFFF).step_by(30_000) {
-        let hex_str: String = format!("{:06X}", hex);
-        let color = unsafe { SRGB24Color::from_hex_unchecked(hex_str.clone().into_boxed_str()) };
-        let hex_str2 = format!("{:X}", color);
+fn hex_conversion_6char() {
+    for hex in (0..=0xFF_FF_FF).step_by(30_000) {
+        let hex_str = format!("{:06X}", hex);
 
-        assert_eq!(hex_str, hex_str2);
+        let color_safe = SRGB24Color::from_hex(&hex_str).unwrap();
+        let color = unsafe { SRGB24Color::from_hex_unchecked(hex_str.clone()) };
+
+        let hex_str_safe = format!("{:X}", color_safe);
+        let hex_str_unsafe = format!("{:X}", color);
+
+        assert_eq!(hex_str, hex_str_safe);
+        assert_eq!(hex_str, hex_str_unsafe);
+    }
+}
+#[test]
+fn hex_conversion_3char() {
+    for hex in 0u16..=0xFFF {
+        let hex_str3 = format!("{:03X}", hex);
+
+        let mut i = hex_str3.chars();
+        let hex_str6 = format!(
+            "{0}{0}{1}{1}{2}{2}",
+            i.next().unwrap(),
+            i.next().unwrap(),
+            i.next().unwrap()
+        );
+
+        let color_safe = SRGB24Color::from_hex(&hex_str3).unwrap();
+        let color = unsafe { SRGB24Color::from_hex_unchecked(hex_str3) };
+
+        let hex_str_safe = format!("{:X}", color_safe);
+        let hex_str_unsafe = format!("{:X}", color);
+
+        assert_eq!(hex_str6, hex_str_safe);
+        assert_eq!(hex_str6, hex_str_unsafe);
     }
 }
 

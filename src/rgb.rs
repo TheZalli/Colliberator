@@ -76,23 +76,62 @@ impl<T: Channel, S> Color for RGBColor<T, S> {
 }
 
 impl<S> RGBColor<u8, S> {
-    /// Create 24-bit RGB color from a 6-character hexcode.
+    /// Create 24-bit RGB color from a 6 or 3 character hexcode, panicking if unsuccesful.
+    ///
+    /// Any characters outside of the used range are ignored.
+    ///
+    /// If the string is less than 6 characters, only 3 first characters are used.
+    /// In three character version every character is repeated to get the full channel value,
+    /// eg. `F5A` is equivalent to `FF55AA`.
     ///
     /// # Safety
     /// If `hex_str` is not a valid utf-8 string then this function will result in undefined
     /// behaviour.
     ///
-    /// If `hex_str` doesn't consist only from 6 characters from range `[0-9a-fA-F]` then this
+    /// If `hex_str` doesn't consist only from characters from range `[0-9a-fA-F]` then this
     /// function will result in a panic.
-    pub unsafe fn from_hex_unchecked(hex_str: Box<str>) -> Self {
+    pub unsafe fn from_hex_unchecked<T: Into<Box<str>>>(hex_str: T) -> Self {
         let f =
             |h1: u8, h2: u8| u8::from_str_radix(str::from_utf8_unchecked(&[h1, h2]), 16).unwrap();
 
-        let mut hex_str = hex_str;
+        let mut hex_str = hex_str.into();
+        let len = hex_str.len();
         let h = hex_str.as_bytes_mut();
         h.make_ascii_lowercase();
 
-        (f(h[0], h[1]), f(h[2], h[3]), f(h[4], h[5])).into()
+        if len >= 6 {
+            (f(h[0], h[1]), f(h[2], h[3]), f(h[4], h[5])).into()
+        } else {
+            (f(h[0], h[0]), f(h[1], h[1]), f(h[2], h[2])).into()
+        }
+    }
+
+    /// Create 24-bit RGB color from a 6 or 3 character hexcode, returning `None` if unsuccesful.
+    ///
+    /// Same as `from_hex_unchecked` except returns `None` if the input is not valid or too short.
+    pub fn from_hex<T: AsRef<str>>(hex_str: T) -> Option<Self> {
+        let len = hex_str.as_ref().len();
+        let mut h = hex_str.as_ref().bytes().map(|b| {
+            let mut b = b;
+            b.make_ascii_lowercase();
+            b
+        });
+
+        let mut f = || -> Option<u8> {
+            u8::from_str_radix(
+                str::from_utf8(&if len >= 6 {
+                    [h.next()?, h.next()?]
+                } else {
+                    let x = h.next()?;
+                    [x, x]
+                })
+                .ok()?,
+                16,
+            )
+            .ok()
+        };
+
+        Some((f()?, f()?, f()?).into())
     }
 }
 
